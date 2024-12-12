@@ -7,7 +7,6 @@ import jakarta.persistence.*;
 @Table(name = "students")
 public class Student {
     @Id
-    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID", nullable = false)
     private Integer id;

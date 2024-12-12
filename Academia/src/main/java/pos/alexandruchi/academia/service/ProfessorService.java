@@ -19,7 +19,7 @@ public class ProfessorService {
         return professorRepository.findById(id).orElse(null);
     }
 
-    public Professor setProfessor(Professor professor) {
+    public Professor addProfessor(Professor professor) {
         try {
             return professorRepository.save(professor);
         } catch (DataIntegrityViolationException e) {

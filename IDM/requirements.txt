@@ -1,0 +1,5 @@
+grpcio~=1.68.1
+protobuf~=5.29.1
+peewee~=3.17.8
+PyJWT~=2.10.1
+pymysql

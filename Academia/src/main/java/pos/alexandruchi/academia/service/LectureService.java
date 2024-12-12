@@ -3,7 +3,6 @@ package pos.alexandruchi.academia.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.repository.LectureRepository;
 
@@ -20,7 +19,7 @@ public class LectureService {
         return lectureRepository.findById(code).orElse(null);
     }
 
-    public Lecture setLecture(Lecture lecture) {
+    public Lecture addLecture(Lecture lecture) {
         try {
             return lectureRepository.save(lecture);
         } catch (DataIntegrityViolationException e) {

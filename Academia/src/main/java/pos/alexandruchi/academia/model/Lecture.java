@@ -1,13 +1,11 @@
 package pos.alexandruchi.academia.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "lectures")
 public class Lecture {
     @Id
-    @JsonIgnore
     @Column(name = "CODE", nullable = false, length = 100)
     private String code;
 
