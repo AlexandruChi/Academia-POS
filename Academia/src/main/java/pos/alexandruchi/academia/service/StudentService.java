@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.Student;
 import pos.alexandruchi.academia.repository.StudentRepository;
 
+import java.util.Optional;
+
 @Service
 public class StudentService {
     private final StudentRepository studentRepository;
@@ -15,8 +17,12 @@ public class StudentService {
         this.studentRepository = studentRepository;
     }
 
-    public Student getStudent(Integer id) {
-        return studentRepository.findById(id).orElse(null);
+    public Iterable<Student> getStudents() {
+        return studentRepository.findAll();
+    }
+
+    public Optional<Student> getStudent(Integer id) {
+        return studentRepository.findById(id);
     }
 
     public Student setStudent(Student student) {
@@ -28,6 +34,8 @@ public class StudentService {
     }
 
     public void deleteStudent(Student student) {
-        studentRepository.delete(student);
+        try {
+            studentRepository.delete(student);
+        } catch (Exception ignores) {}
     }
 }

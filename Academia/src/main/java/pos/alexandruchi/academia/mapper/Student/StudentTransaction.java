@@ -13,7 +13,12 @@ public class StudentTransaction {
         student.setFirstName(studentDTO.firstName);
         student.setEmail(studentDTO.email);
         student.setStudyCycle(studentDTO.studyCycle);
-        student.setStudyYear(Integer.valueOf(studentDTO.studyYear));
-        student.setGroup(Integer.valueOf(studentDTO.group));
+
+        try {
+            student.setStudyYear(Integer.valueOf(studentDTO.studyYear));
+            student.setGroup(Integer.valueOf(studentDTO.group));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

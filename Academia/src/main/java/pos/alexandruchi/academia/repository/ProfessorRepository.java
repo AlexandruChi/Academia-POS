@@ -6,4 +6,5 @@ import pos.alexandruchi.academia.model.Professor;
 
 @Repository
 public interface ProfessorRepository extends CrudRepository<Professor, Integer> {
+    public Professor findByEmail(String email);
 }

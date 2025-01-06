@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.Professor;
 import pos.alexandruchi.academia.repository.ProfessorRepository;
 
+import java.util.Optional;
+
 @Service
 public class ProfessorService {
     private final ProfessorRepository professorRepository;
@@ -15,11 +17,15 @@ public class ProfessorService {
         this.professorRepository = professorRepository;
     }
 
-    public Professor getProfessor(Integer id) {
-        return professorRepository.findById(id).orElse(null);
+    public Iterable<Professor> getProfessors() {
+        return professorRepository.findAll();
     }
 
-    public Professor addProfessor(Professor professor) {
+    public Optional<Professor> getProfessor(Integer id) {
+        return professorRepository.findById(id);
+    }
+
+    public Professor setProfessor(Professor professor) {
         try {
             return professorRepository.save(professor);
         } catch (DataIntegrityViolationException e) {
@@ -28,6 +34,8 @@ public class ProfessorService {
     }
 
     public void deleteProfessor(Professor professor) {
-        professorRepository.delete(professor);
+        try {
+            professorRepository.delete(professor);
+        } catch (Exception ignores) {}
     }
 }

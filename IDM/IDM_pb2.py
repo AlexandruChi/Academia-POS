@@ -25,13 +25,14 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tIDM.proto\x12\x03IDM\x1a\x1bgoogle/protobuf/empty.proto\"+\n\x05login\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"<\n\x08register\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x0c\n\x04role\x18\x03 \x01(\t\"\x16\n\x05token\x12\r\n\x05token\x18\x01 \x01(\t2\xe6\x01\n\x03IDM\x12(\n\x0c\x41uthenticate\x12\n.IDM.login\x1a\n.IDM.token\"\x00\x12\x42\n\x0e\x44\x65\x61uthenticate\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x12\x33\n\x08Register\x12\r.IDM.register\x1a\x16.google.protobuf.Empty\"\x00\x12<\n\x08Validate\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tIDM.proto\x12\x03IDM\x1a\x1bgoogle/protobuf/empty.proto\"+\n\x05login\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"<\n\x08register\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x0c\n\x04role\x18\x03 \x01(\t\"\x16\n\x05token\x12\r\n\x05token\x18\x01 \x01(\t2\xe6\x01\n\x03IDM\x12(\n\x0c\x41uthenticate\x12\n.IDM.login\x1a\n.IDM.token\"\x00\x12\x42\n\x0e\x44\x65\x61uthenticate\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x12\x33\n\x08Register\x12\r.IDM.register\x1a\x16.google.protobuf.Empty\"\x00\x12<\n\x08Validate\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x42\x1f\n\x1dpos.alexandruchi.academia.IDMb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'IDM_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
-  DESCRIPTOR._loaded_options = None
+  _globals['DESCRIPTOR']._loaded_options = None
+  _globals['DESCRIPTOR']._serialized_options = b'\n\035pos.alexandruchi.academia.IDM'
   _globals['_LOGIN']._serialized_start=47
   _globals['_LOGIN']._serialized_end=90
   _globals['_REGISTER']._serialized_start=92

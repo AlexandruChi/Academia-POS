@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.repository.LectureRepository;
 
+import java.util.Optional;
+
 @Service
 public class LectureService {
     private final LectureRepository lectureRepository;
@@ -15,11 +17,20 @@ public class LectureService {
         this.lectureRepository = lectureRepository;
     }
 
-    public Lecture getLecture(String code) {
-        return lectureRepository.findById(code).orElse(null);
+    public Iterable<Lecture> getLectures() {
+        return lectureRepository.findAll();
     }
 
-    public Lecture addLecture(Lecture lecture) {
+    public Optional<Lecture> getLecture(String code) {
+        return lectureRepository.findById(code);
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    public Lecture setLecture(Lecture lecture) {
+        if (lecture == null) {
+            throw new IllegalArgumentException();
+        }
+
         try {
             return lectureRepository.save(lecture);
         } catch (DataIntegrityViolationException e) {
@@ -28,6 +39,8 @@ public class LectureService {
     }
 
     public void deleteLecture(Lecture lecture) {
-        lectureRepository.delete(lecture);
+        try {
+            lectureRepository.delete(lecture);
+        } catch (Exception ignores) {}
     }
 }

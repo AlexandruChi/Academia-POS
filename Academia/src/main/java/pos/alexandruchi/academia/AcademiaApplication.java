@@ -1,11 +1,17 @@
 package pos.alexandruchi.academia;
 
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class AcademiaApplication {
     public static void main(String[] args) {
-        SpringApplication.run(AcademiaApplication.class, args);
+        try {
+            SpringApplication.run(AcademiaApplication.class, args);
+        } catch (BeanCreationException e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
+        }
     }
 }

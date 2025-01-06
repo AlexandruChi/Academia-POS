@@ -29,22 +29,12 @@ public class LectureMapper {
 
     public Lecture toEntity(LectureDTO lectureDTO, String code) {
         Lecture lecture = new Lecture();
-
-        if (setEntity(lecture, lectureDTO)) {
-            lecture.setCode(code);
-            return lecture;
-        }
-
-        return null;
+        setEntity(lecture, lectureDTO);
+        lecture.setCode(code);
+        return lecture;
     }
 
-    public boolean setEntity(Lecture lecture, LectureDTO lectureDTO) {
-        try {
-            lectureTransaction.update(lecture, lectureDTO);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void setEntity(Lecture lecture, LectureDTO lectureDTO) {
+        lectureTransaction.update(lecture, lectureDTO);
     }
 }

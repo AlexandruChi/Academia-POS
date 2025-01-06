@@ -1,9 +1,10 @@
 from peewee import MySQLDatabase
 
+# noinspection SpellCheckingInspection
 db = MySQLDatabase(
     database='IDM',
     user='user',
     password='pass',
-    host='0.0.0.0',
-    port=3305
+    host='idmdb',
+    port=3306
 )

@@ -3,6 +3,7 @@ import uuid
 from concurrent import futures
 import grpc
 import jwt
+from grpc import RpcError
 from jwt import InvalidSignatureError, DecodeError, ExpiredSignatureError
 from peewee import IntegrityError
 
@@ -20,7 +21,7 @@ IDM_KEY = 'vYvAwpVXsEwtxyUbzWoqiTxPGUzZ4Qqn'
 
 PORT = 50000
 
-ROLES = ('admin', 'teacher', 'student')
+ROLES = ('admin', 'professor', 'student')
 
 class InvalidTokenError(RuntimeError):
     pass
@@ -32,6 +33,7 @@ class IDM(IDM_pb2_grpc.IDMServicer):
 
         if not (request.username and request.password):
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            # noinspection PyUnresolvedReferences
             return IDM_pb2.token()
 
         passhash = hashlib.md5(request.password.encode()).hexdigest()
@@ -42,6 +44,7 @@ class IDM(IDM_pb2_grpc.IDMServicer):
         ).first()
 
         if user is None:
+            # noinspection PyUnresolvedReferences
             return IDM_pb2.token(token=None)
 
         payload = {
@@ -53,6 +56,7 @@ class IDM(IDM_pb2_grpc.IDMServicer):
 
         token = jwt.encode(payload, IDM_KEY, 'HS256')
 
+        # noinspection PyUnresolvedReferences
         return IDM_pb2.token(token=token)
 
     def Deauthenticate(self, request, context):
@@ -87,6 +91,23 @@ class IDM(IDM_pb2_grpc.IDMServicer):
 
     def Register(self, request, context):
         exceptions = (IntegrityError,)
+
+        client = grpc.insecure_channel(f'localhost:{PORT}')
+        stub = IDM_pb2_grpc.IDMStub(client)
+
+        try:
+            stub.Validate(Empty(), metadata=(
+                ('authorization', dict(context.invocation_metadata()).get('authorization')),)
+            )
+        except Exception as ex:
+            context.set_code(grpc.StatusCode.INTERNAL)
+
+            # noinspection PyUnresolvedReferences
+            if isinstance(ex, RpcError) and ex.code() == grpc.StatusCode.UNAUTHENTICATED:
+                context.set_code(grpc.StatusCode.UNAUTHENTICATED)
+
+            return Empty()
+
 
         if not (request.username and request.password) or request.role not in ROLES:
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)

@@ -29,21 +29,11 @@ public class ProfessorMapper {
 
     public Professor toEntity(ProfessorDTO professorDTO) {
         Professor professor = new Professor();
-
-        if (setEntity(professor, professorDTO)) {
-            return professor;
-        }
-
-        return null;
+        setEntity(professor, professorDTO);
+        return professor;
     }
 
-    public boolean setEntity(Professor professor, ProfessorDTO professorDTO) {
-        try {
-            professorTransaction.update(professor, professorDTO);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void setEntity(Professor professor, ProfessorDTO professorDTO) {
+        professorTransaction.update(professor, professorDTO);
     }
 }

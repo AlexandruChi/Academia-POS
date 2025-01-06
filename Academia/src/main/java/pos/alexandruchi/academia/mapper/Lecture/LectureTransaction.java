@@ -18,7 +18,15 @@ public class LectureTransaction {
 
     @Transactional
     void update(Lecture lecture, LectureDTO lectureDTO) {
-        lecture.setIdHolder(professorService.getProfessor(Integer.valueOf(lectureDTO.idHolder)));
+        try {
+            lecture.setIdHolder(
+                    professorService.getProfessor(Integer.valueOf(lectureDTO.idHolder))
+                            .orElseThrow(IllegalArgumentException::new)
+            );
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(e);
+        }
+
         lecture.setLectureName(lectureDTO.lectureName);
         lecture.setStudyYear(lectureDTO.studyYear);
         lecture.setLectureType(lectureDTO.lectureType);

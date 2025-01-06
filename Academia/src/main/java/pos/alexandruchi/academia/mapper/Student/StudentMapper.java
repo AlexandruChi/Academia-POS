@@ -29,21 +29,11 @@ public class StudentMapper {
 
     public Student toEntity(StudentDTO studentDTO) {
         Student student = new Student();
-
-        if (!setEntity(student, studentDTO)) {
-            return null;
-        }
-
+        setEntity(student, studentDTO);
         return student;
     }
 
-    public boolean setEntity(Student student, StudentDTO studentDTO) {
-        try {
-            studentTransaction.update(student, studentDTO);
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    public void setEntity(Student student, StudentDTO studentDTO) {
+        studentTransaction.update(student, studentDTO);
     }
 }

@@ -1,0 +1,38 @@
+services:
+
+  idmdb:
+    container_name: idmdb
+    image: mariadb:latest
+    networks:
+      - app-network
+    ports:
+      - "3305:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=password
+      - MARIADB_DATABASE=IDM
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=pass
+    volumes:
+      - idmdb:/var/lib/mysql
+      - ./idmdb.sql:/docker-entrypoint-initdb.d/idmdb.sql
+
+  idm:
+    container_name: idm
+    build:
+      context: IDM
+    networks:
+      - app-network
+    ports:
+      - "50000:50000"
+    depends_on:
+      - idmdb
+    restart: always
+  
+  
+networks:
+  app-network:
+    driver: bridge
+    
+volumes:
+  idmdb:
+    name: idmdb
