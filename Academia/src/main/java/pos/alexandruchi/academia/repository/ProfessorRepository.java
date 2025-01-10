@@ -6,5 +6,10 @@ import pos.alexandruchi.academia.model.Professor;
 
 @Repository
 public interface ProfessorRepository extends CrudRepository<Professor, Integer> {
-    public Professor findByEmail(String email);
+    Professor findByEmail(String email);
+
+    Iterable<Professor> findAllByTeachingDegree(String teachingDegree);
+    Iterable<Professor> findAllByLastNameStartsWith(String lastName);
+
+    Iterable<Professor> findAllByTeachingDegreeAndLastNameStartsWith(String teachingDegree, String lastName);
 }

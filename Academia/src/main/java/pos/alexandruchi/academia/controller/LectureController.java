@@ -26,7 +26,10 @@ public class LectureController {
     private final AuthorizationService authorizationService;
 
     @Autowired
-    public LectureController(LectureService lectureService, LectureMapper lectureMapper, EnrollService enrollService, AuthorizationService authorizationService) {
+    public LectureController(
+            LectureService lectureService, LectureMapper lectureMapper,
+            EnrollService enrollService, AuthorizationService authorizationService
+    ) {
         this.lectureService = lectureService;
         this.lectureMapper = lectureMapper;
         this.enrollService = enrollService;
@@ -35,7 +38,8 @@ public class LectureController {
 
     @GetMapping
     public List<Map<String, Object>> getLectures(
-            @RequestHeader(value = "Authorization", required = false) String authorization
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestParam(required = false) String type, @RequestParam(required = false) String category
     ) {
         Claims claims = CheckAuthorization(authorization, List.of(
                 Role.ADMIN, Role.PROFESSOR, Role.STUDENT
@@ -43,7 +47,7 @@ public class LectureController {
 
         List<Map<String, Object>> lectures = new ArrayList<>();
 
-        for (Lecture lecture : lectureService.getLectures()) {
+        for (Lecture lecture : lectureService.getLectures(type, category)) {
             if (!CheckAcces(claims, lecture)) {
                 continue;
             }
@@ -128,7 +132,7 @@ public class LectureController {
     /// Check if a user has access to a lecture
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean CheckAcces(@NotNull Claims claims, Lecture lecture) {
-        return claims.role() != AuthorizationService.Role.STUDENT || enrollService.isEnrolled(
+        return claims.role() != Role.STUDENT || enrollService.isEnrolled(
                 (Student) authorizationService.getEntity(claims), lecture);
     }
 }

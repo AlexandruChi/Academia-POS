@@ -3,7 +3,6 @@ package pos.alexandruchi.academia.service;
 import com.auth0.jwt.JWT;
 import com.google.protobuf.Empty;
 import io.grpc.*;
-import org.springframework.context.ApplicationContext;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +16,7 @@ public class IDMService {
     private final ManagedChannel channel;
     private final IDMGrpc.IDMBlockingStub stub;
 
-    public IDMService(ApplicationContext context) {
+    public IDMService() {
         try {
             channel = ManagedChannelBuilder
                     .forAddress("::", 50000)

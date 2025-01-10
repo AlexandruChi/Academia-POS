@@ -21,6 +21,18 @@ public class LectureService {
         return lectureRepository.findAll();
     }
 
+    public Iterable<Lecture> getLectures(String type, String category) {
+        if (type == null && category == null) {
+            return getLectures();
+        } else if (type == null) {
+            return lectureRepository.findAllByLectureCategory(category);
+        } else if (category == null) {
+            return lectureRepository.findAllByLectureType(type);
+        } else {
+            return lectureRepository.findAllByLectureTypeAndLectureCategory(type, category);
+        }
+    }
+
     public Optional<Lecture> getLecture(String code) {
         return lectureRepository.findById(code);
     }

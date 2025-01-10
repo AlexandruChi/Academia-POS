@@ -6,4 +6,8 @@ import pos.alexandruchi.academia.model.Lecture;
 
 @Repository
 public interface LectureRepository extends CrudRepository<Lecture, String> {
+    Iterable<Lecture> findAllByLectureType(String lectureType);
+    Iterable<Lecture> findAllByLectureCategory(String lectureCategory);
+
+    Iterable<Lecture> findAllByLectureTypeAndLectureCategory(String lectureType, String lectureCategory);
 }

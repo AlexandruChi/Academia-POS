@@ -8,7 +8,9 @@ import org.springframework.web.server.ResponseStatusException;
 import pos.alexandruchi.academia.DTO.ProfessorDTO;
 import pos.alexandruchi.academia.exception.authorization.Unauthenticated;
 import pos.alexandruchi.academia.exception.authorization.Unauthorized;
+import pos.alexandruchi.academia.mapper.Lecture.LectureMapper;
 import pos.alexandruchi.academia.mapper.Professor.ProfessorMapper;
+import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.model.Professor;
 import pos.alexandruchi.academia.service.AuthorizationService;
 import pos.alexandruchi.academia.service.ProfessorService;
@@ -23,23 +25,30 @@ public class ProfessorController {
     private final AuthorizationService authorizationService;
     private final ProfessorService professorService;
     private final ProfessorMapper professorMapper;
+    private final LectureMapper lectureMapper;
 
     @Autowired
-    public ProfessorController(AuthorizationService authorizationService, ProfessorService professorService, ProfessorMapper professorMapper) {
+    public ProfessorController(
+            AuthorizationService authorizationService, ProfessorService professorService,
+            ProfessorMapper professorMapper, LectureMapper lectureMapper
+    ) {
         this.authorizationService = authorizationService;
         this.professorService = professorService;
         this.professorMapper = professorMapper;
+        this.lectureMapper = lectureMapper;
     }
 
     @GetMapping
     public List<Map<String, Object>> getProfessors(
-            @RequestHeader(value = "Authorization", required = false) String authorization
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestParam(value = "academic_rank", required = false) String academicRank,
+            @RequestParam(value = "name", required = false) String lastNameStart
     ) {
         CheckAuthorization(authorization, List.of(Role.ADMIN));
 
         List<Map<String, Object>> professors = new ArrayList<>();
 
-        for (Professor professor : professorService.getProfessors()) {
+        for (Professor professor : professorService.getProfessors(lastNameStart, academicRank)) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", professor.getId());
             map.put("professor", professorMapper.toDTO(professor));
@@ -57,7 +66,7 @@ public class ProfessorController {
 
         try {
             return professorMapper.toDTO(professorService.getProfessor(Integer.valueOf(id)).orElseThrow(
-                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+                    NumberFormatException::new
             ));
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -94,6 +103,37 @@ public class ProfessorController {
                     professorService.getProfessor(Integer.valueOf(id)).orElse(null)
             );
         } catch (NumberFormatException ignored) {}
+    }
+
+    @GetMapping("/{id}/lectures")
+    public List<Map<String, Object>> getProfessorLectures(
+            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.STUDENT));
+        Professor professor;
+
+        try {
+            if (!Objects.equals((
+                    professor = professorService.getProfessor(Integer.valueOf(id)).orElseThrow(
+                            NumberFormatException::new
+                    )
+            ).getEmail(), claims.email())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+
+        List<Map<String, Object>> lectures = new ArrayList<>();
+
+        for (Lecture lecture : professorService.getLectures(professor)) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("code", lecture.getCode());
+            map.put("lecture", lectureMapper.toDTO(lecture));
+            lectures.add(map);
+        }
+
+        return lectures;
     }
 
     /// Check if user has the required role and sends response appropriate code otherwise
