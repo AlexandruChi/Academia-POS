@@ -12,5 +12,6 @@ import java.util.Optional;
 @Repository
 public interface JoinDSRepository extends CrudRepository<JoinDS, JoinDSId> {
     Iterable<JoinDS> findAllByStudentID(Student studentID);
+    Iterable<JoinDS> findAllByLectureID(Lecture lectureID);
     Optional<JoinDS> findByStudentIDAndLectureID(Student studentID, Lecture lectureID);
 }

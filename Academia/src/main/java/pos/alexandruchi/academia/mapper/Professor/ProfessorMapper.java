@@ -20,8 +20,8 @@ public class ProfessorMapper {
         professorDTO.lastName = professor.getLastName();
         professorDTO.firstName = professor.getFirstName();
         professorDTO.email = professor.getEmail();
-        professorDTO.teachingDegree = professor.getTeachingDegree();
-        professorDTO.associationType = professor.getAssociationType();
+        professorDTO.teachingDegree = professor.getTeachingDegree().toString();
+        professorDTO.associationType = professor.getAssociationType().toString();
         professorDTO.affiliation = professor.getAffiliation();
 
         return professorDTO;

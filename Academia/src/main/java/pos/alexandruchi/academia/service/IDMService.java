@@ -3,7 +3,6 @@ package pos.alexandruchi.academia.service;
 import com.auth0.jwt.JWT;
 import com.google.protobuf.Empty;
 import io.grpc.*;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import pos.alexandruchi.academia.IDM.*;
@@ -29,7 +28,7 @@ public class IDMService {
         stub = IDMGrpc.newBlockingStub(channel);
     }
 
-    private @NotNull Boolean Validate(String token) {
+    private Boolean Validate(String token) {
         if (token == null) {
             return false;
         }
@@ -38,7 +37,7 @@ public class IDMService {
 
             @Override
             public void applyRequestMetadata(
-                    RequestInfo requestInfo, Executor executor, @NotNull MetadataApplier metadataApplier
+                    RequestInfo requestInfo, Executor executor, MetadataApplier metadataApplier
             ) {
                 Metadata metadata = new Metadata();
                 Metadata.Key<String> authorization = Metadata.Key.of(

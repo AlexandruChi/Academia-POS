@@ -1,37 +1,24 @@
 package pos.alexandruchi.academia.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
+
+import pos.alexandruchi.academia.converter.types.*;
 
 @Entity
 @Table(name = "professors")
+@Access(AccessType.PROPERTY)
 public class Professor {
+    private Integer id;
+    private String lastName;
+    private String firstName;
+    private String email;
+    private TeachingDegree teachingDegree;
+    private AssociationType associationType;
+    private String affiliation;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID", nullable = false)
-    private Integer id;
-
-    @Column(name = "last_name", nullable = false, length = 100)
-    private String lastName;
-
-    @Column(name = "`first name`", nullable = false, length = 100)
-    private String firstName;
-
-    @Column(name = "email", length = 100)
-    private String email;
-
-    @Lob
-    @Column(name = "teaching_degree")
-    private String teachingDegree;
-
-    @ColumnDefault("'extern'")
-    @Lob
-    @Column(name = "association_type", nullable = false)
-    private String associationType;
-
-    @Column(name = "affiliation", length = 100)
-    private String affiliation;
-
     public Integer getId() {
         return id;
     }
@@ -40,6 +27,7 @@ public class Professor {
         this.id = id;
     }
 
+    @Column(name = "last_name", nullable = false, length = 100)
     public String getLastName() {
         return lastName;
     }
@@ -48,6 +36,7 @@ public class Professor {
         this.lastName = lastName;
     }
 
+    @Column(name = "`first name`", nullable = false, length = 100)
     public String getFirstName() {
         return firstName;
     }
@@ -56,6 +45,7 @@ public class Professor {
         this.firstName = firstName;
     }
 
+    @Column(name = "email", length = 100)
     public String getEmail() {
         return email;
     }
@@ -64,22 +54,25 @@ public class Professor {
         this.email = email;
     }
 
-    public String getTeachingDegree() {
+    @Column(name = "teaching_degree")
+    public TeachingDegree getTeachingDegree() {
         return teachingDegree;
     }
 
-    public void setTeachingDegree(String teachingDegree) {
+    public void setTeachingDegree(TeachingDegree teachingDegree) {
         this.teachingDegree = teachingDegree;
     }
 
-    public String getAssociationType() {
+    @Column(name = "association_type")
+    public AssociationType getAssociationType() {
         return associationType;
     }
 
-    public void setAssociationType(String associationType) {
+    public void setAssociationType(AssociationType associationType) {
         this.associationType = associationType;
     }
 
+    @Column(name = "affiliation", length = 100)
     public String getAffiliation() {
         return affiliation;
     }
@@ -87,5 +80,4 @@ public class Professor {
     public void setAffiliation(String affiliation) {
         this.affiliation = affiliation;
     }
-
 }

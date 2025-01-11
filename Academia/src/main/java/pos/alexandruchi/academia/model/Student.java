@@ -1,34 +1,23 @@
 package pos.alexandruchi.academia.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import pos.alexandruchi.academia.converter.types.*;
 
 @Entity
 @Table(name = "students")
+@Access(AccessType.PROPERTY)
 public class Student {
+    private Integer id;
+    private String lastName;
+    private String firstName;
+    private String email;
+    private StudyCycle studyCycle;
+    private Integer studyYear;
+    private Integer group;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID", nullable = false)
-    private Integer id;
-
-    @Column(name = "last_name", nullable = false, length = 100)
-    private String lastName;
-
-    @Column(name = "first_name", nullable = false, length = 100)
-    private String firstName;
-
-    @Column(name = "email", nullable = false, length = 100)
-    private String email;
-
-    @Column(name = "study_cycle", nullable = false, length = 100)
-    private String studyCycle;
-
-    @Column(name = "study_year", nullable = false)
-    private Integer studyYear;
-
-    @Column(name = "`group`", nullable = false)
-    private Integer group;
-
     public Integer getId() {
         return id;
     }
@@ -37,6 +26,7 @@ public class Student {
         this.id = id;
     }
 
+    @Column(name = "last_name", nullable = false, length = 100)
     public String getLastName() {
         return lastName;
     }
@@ -45,6 +35,7 @@ public class Student {
         this.lastName = lastName;
     }
 
+    @Column(name = "first_name", nullable = false, length = 100)
     public String getFirstName() {
         return firstName;
     }
@@ -53,6 +44,7 @@ public class Student {
         this.firstName = firstName;
     }
 
+    @Column(name = "email", nullable = false, length = 100)
     public String getEmail() {
         return email;
     }
@@ -61,14 +53,16 @@ public class Student {
         this.email = email;
     }
 
-    public String getStudyCycle() {
+    @Column(name = "study_cycle", nullable = false, length = 100)
+    public StudyCycle getStudyCycle() {
         return studyCycle;
     }
 
-    public void setStudyCycle(String studyCycle) {
+    public void setStudyCycle(StudyCycle studyCycle) {
         this.studyCycle = studyCycle;
     }
 
+    @Column(name = "study_year", nullable = false)
     public Integer getStudyYear() {
         return studyYear;
     }
@@ -77,6 +71,7 @@ public class Student {
         this.studyYear = studyYear;
     }
 
+    @Column(name = "`group`", nullable = false)
     public Integer getGroup() {
         return group;
     }
@@ -84,5 +79,4 @@ public class Student {
     public void setGroup(Integer group) {
         this.group = group;
     }
-
 }

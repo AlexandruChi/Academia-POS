@@ -20,7 +20,7 @@ public class StudentMapper {
         studentDTO.lastName = student.getLastName();
         studentDTO.firstName = student.getFirstName();
         studentDTO.email = student.getEmail();
-        studentDTO.studyCycle = student.getStudyCycle();
+        studentDTO.studyCycle = student.getStudyCycle().toString();
         studentDTO.studyYear = String.valueOf(student.getStudyYear());
         studentDTO.group = String.valueOf(student.getGroup());
 

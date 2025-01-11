@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Component;
 import pos.alexandruchi.academia.DTO.StudentDTO;
 import pos.alexandruchi.academia.model.Student;
+import pos.alexandruchi.academia.converter.types.*;
 
 @Component
 public class StudentTransaction {
@@ -12,7 +13,7 @@ public class StudentTransaction {
         student.setLastName(studentDTO.lastName);
         student.setFirstName(studentDTO.firstName);
         student.setEmail(studentDTO.email);
-        student.setStudyCycle(studentDTO.studyCycle);
+        student.setStudyCycle(StudyCycle.of(studentDTO.studyCycle));
 
         try {
             student.setStudyYear(Integer.valueOf(studentDTO.studyYear));

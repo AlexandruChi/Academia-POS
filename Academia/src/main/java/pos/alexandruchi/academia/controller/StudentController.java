@@ -1,7 +1,7 @@
 package pos.alexandruchi.academia.controller;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,8 +22,13 @@ import pos.alexandruchi.academia.service.AuthorizationService.Claims;
 import java.util.*;
 
 @RestController
-@RequestMapping("/students")
+@RequestMapping(StudentController.path)
 public class StudentController {
+    @Value("${server.servlet.context-path}")
+    public String context;
+
+    public static final String path = "/students";
+
     private final AuthorizationService authorizationService;
     private final StudentService studentService;
     private final StudentMapper studentMapper;
@@ -135,7 +140,7 @@ public class StudentController {
 
         for (Lecture lecture : studentService.getLectures(student)) {
             Map<String, Object> map = new HashMap<>();
-            map.put("code", lecture.getCode());
+            map.put("code", lecture.getId());
             map.put("lecture", lectureMapper.toDTO(lecture));
             lectures.add(map);
         }
@@ -184,7 +189,7 @@ public class StudentController {
 
     /// Check if user has the required role and sends response appropriate code otherwise
     @SuppressWarnings("UnusedReturnValue")
-    private @NotNull Claims CheckAuthorization(String authorization, List<AuthorizationService.Role> roles) {
+    private Claims CheckAuthorization(String authorization, List<AuthorizationService.Role> roles) {
         try {
             return authorizationService.checkAuthorization(authorization, roles);
         } catch (Unauthenticated e) {

@@ -20,9 +20,9 @@ public class LectureMapper {
         lectureDTO.idHolder = String.valueOf(lecture.getIdHolder().getId());
         lectureDTO.lectureName = lecture.getLectureName();
         lectureDTO.studyYear = lecture.getStudyYear();
-        lectureDTO.lectureType = lecture.getLectureType();
-        lectureDTO.lectureCategory = lecture.getLectureCategory();
-        lectureDTO.examinationType = lecture.getExaminationType();
+        lectureDTO.lectureType = lecture.getLectureType().toString();
+        lectureDTO.lectureCategory = lecture.getLectureCategory().toString();
+        lectureDTO.examinationType = lecture.getExaminationType().toString();
 
         return lectureDTO;
     }
@@ -30,7 +30,7 @@ public class LectureMapper {
     public Lecture toEntity(LectureDTO lectureDTO, String code) {
         Lecture lecture = new Lecture();
         setEntity(lecture, lectureDTO);
-        lecture.setCode(code);
+        lecture.setId(code);
         return lecture;
     }
 

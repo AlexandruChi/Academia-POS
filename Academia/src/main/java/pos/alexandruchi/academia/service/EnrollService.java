@@ -25,7 +25,7 @@ public class EnrollService {
 
         JoinDSId joinDSId = new JoinDSId();
         joinDSId.setStudentID(student.getId());
-        joinDSId.setDisciplineID(lecture.getCode());
+        joinDSId.setDisciplineID(lecture.getId());
         return joinDSRepository.existsById(joinDSId);
     }
 

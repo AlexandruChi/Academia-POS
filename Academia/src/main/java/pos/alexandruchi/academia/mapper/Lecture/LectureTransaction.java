@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import pos.alexandruchi.academia.DTO.LectureDTO;
 import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.service.ProfessorService;
+import pos.alexandruchi.academia.converter.types.*;
 
 @Component
 public class LectureTransaction {
@@ -29,8 +30,8 @@ public class LectureTransaction {
 
         lecture.setLectureName(lectureDTO.lectureName);
         lecture.setStudyYear(lectureDTO.studyYear);
-        lecture.setLectureType(lectureDTO.lectureType);
-        lecture.setLectureCategory(lectureDTO.lectureCategory);
-        lecture.setExaminationType(lectureDTO.examinationType);
+        lecture.setLectureType(LectureType.of(lectureDTO.lectureType));
+        lecture.setLectureCategory(LectureCategory.of(lectureDTO.lectureCategory));
+        lecture.setExaminationType(ExaminationType.of(lectureDTO.examinationType));
     }
 }

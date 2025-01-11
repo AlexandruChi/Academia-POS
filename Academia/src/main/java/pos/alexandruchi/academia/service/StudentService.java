@@ -2,6 +2,7 @@ package pos.alexandruchi.academia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.JoinDS;
 import pos.alexandruchi.academia.model.Lecture;
@@ -24,7 +25,11 @@ public class StudentService {
     }
 
     public Iterable<Student> getStudents() {
-        return studentRepository.findAll();
+        return getStudents(Pageable.unpaged());
+    }
+
+    public Iterable<Student> getStudents(Pageable pageable) {
+        return studentRepository.findAll(pageable);
     }
 
     public Optional<Student> getStudent(Integer id) {

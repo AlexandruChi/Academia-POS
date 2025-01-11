@@ -4,20 +4,13 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "join_ds")
+@Access(AccessType.PROPERTY)
 public class JoinDS {
-    @EmbeddedId
     private JoinDSId id;
-
-    @MapsId("disciplineID")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "DisciplineID", nullable = false)
     private Lecture lectureID;
-
-    @MapsId("studentID")
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "StudentID", nullable = false)
     private pos.alexandruchi.academia.model.Student studentID;
 
+    @EmbeddedId
     public JoinDSId getId() {
         return id;
     }
@@ -26,6 +19,9 @@ public class JoinDS {
         this.id = id;
     }
 
+    @MapsId("disciplineID")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "DisciplineID", nullable = false)
     public Lecture getLectureID() {
         return lectureID;
     }
@@ -34,6 +30,9 @@ public class JoinDS {
         this.lectureID = lectureID;
     }
 
+    @MapsId("studentID")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "StudentID", nullable = false)
     public pos.alexandruchi.academia.model.Student getStudentID() {
         return studentID;
     }

@@ -2,43 +2,32 @@ package pos.alexandruchi.academia.model;
 
 import jakarta.persistence.*;
 
+import pos.alexandruchi.academia.converter.types.*;
+
 @Entity
 @Table(name = "lectures")
+@Access(AccessType.PROPERTY)
 public class Lecture {
+    private String id;
+    private pos.alexandruchi.academia.model.Professor idHolder;
+    private String lectureName;
+    private String studyYear;
+    private LectureType lectureType;
+    private LectureCategory lectureCategory;
+    private ExaminationType examinationType;
+
     @Id
     @Column(name = "CODE", nullable = false, length = 100)
-    private String code;
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "ID_holder", nullable = false)
-    private pos.alexandruchi.academia.model.Professor idHolder;
-
-    @Column(name = "lecture_name", nullable = false, length = 100)
-    private String lectureName;
-
-    @Column(name = "study_year", nullable = false, length = 100)
-    private String studyYear;
-
-    @Lob
-    @Column(name = "lecture_type", nullable = false)
-    private String lectureType;
-
-    @Lob
-    @Column(name = "lecture_category", nullable = false)
-    private String lectureCategory;
-
-    @Lob
-    @Column(name = "examination_type", nullable = false)
-    private String examinationType;
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
     public pos.alexandruchi.academia.model.Professor getIdHolder() {
         return idHolder;
     }
@@ -47,6 +36,7 @@ public class Lecture {
         this.idHolder = idHolder;
     }
 
+    @Column(name = "lecture_name", nullable = false, length = 100)
     public String getLectureName() {
         return lectureName;
     }
@@ -55,6 +45,7 @@ public class Lecture {
         this.lectureName = lectureName;
     }
 
+    @Column(name = "study_year", nullable = false, length = 100)
     public String getStudyYear() {
         return studyYear;
     }
@@ -63,28 +54,30 @@ public class Lecture {
         this.studyYear = studyYear;
     }
 
-    public String getLectureType() {
+    @Column(name = "lecture_type", nullable = false)
+    public LectureType getLectureType() {
         return lectureType;
     }
 
-    public void setLectureType(String lectureType) {
+    public void setLectureType(LectureType lectureType) {
         this.lectureType = lectureType;
     }
 
-    public String getLectureCategory() {
+    @Column(name = "lecture_category", nullable = false)
+    public LectureCategory getLectureCategory() {
         return lectureCategory;
     }
 
-    public void setLectureCategory(String lectureCategory) {
+    public void setLectureCategory(LectureCategory lectureCategory) {
         this.lectureCategory = lectureCategory;
     }
 
-    public String getExaminationType() {
+    @Column(name = "examination_type", nullable = false)
+    public ExaminationType getExaminationType() {
         return examinationType;
     }
 
-    public void setExaminationType(String examinationType) {
+    public void setExaminationType(ExaminationType examinationType) {
         this.examinationType = examinationType;
     }
-
 }

@@ -1,7 +1,7 @@
 package pos.alexandruchi.academia.controller;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,12 +16,18 @@ import pos.alexandruchi.academia.service.AuthorizationService;
 import pos.alexandruchi.academia.service.ProfessorService;
 import pos.alexandruchi.academia.service.AuthorizationService.Role;
 import pos.alexandruchi.academia.service.AuthorizationService.Claims;
+import pos.alexandruchi.academia.converter.types.*;
 
 import java.util.*;
 
 @RestController
-@RequestMapping("/professors")
+@RequestMapping(ProfessorController.path)
 public class ProfessorController {
+    @Value("${server.servlet.context-path}")
+    public String context;
+
+    public static final String path = "/professors";
+
     private final AuthorizationService authorizationService;
     private final ProfessorService professorService;
     private final ProfessorMapper professorMapper;
@@ -46,9 +52,18 @@ public class ProfessorController {
     ) {
         CheckAuthorization(authorization, List.of(Role.ADMIN));
 
-        List<Map<String, Object>> professors = new ArrayList<>();
+        TeachingDegree teachingDegree = null;
 
-        for (Professor professor : professorService.getProfessors(lastNameStart, academicRank)) {
+        try {
+            if (academicRank != null) {
+                teachingDegree = TeachingDegree.of(academicRank);
+            }
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        List<Map<String, Object>> professors = new ArrayList<>();
+        for (Professor professor : professorService.getProfessors(lastNameStart, teachingDegree)) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", professor.getId());
             map.put("professor", professorMapper.toDTO(professor));
@@ -128,7 +143,7 @@ public class ProfessorController {
 
         for (Lecture lecture : professorService.getLectures(professor)) {
             Map<String, Object> map = new HashMap<>();
-            map.put("code", lecture.getCode());
+            map.put("code", lecture.getId());
             map.put("lecture", lectureMapper.toDTO(lecture));
             lectures.add(map);
         }
@@ -138,7 +153,7 @@ public class ProfessorController {
 
     /// Check if user has the required role and sends response appropriate code otherwise
     @SuppressWarnings("UnusedReturnValue")
-    private @NotNull Claims CheckAuthorization(String authorization, List<AuthorizationService.Role> roles) {
+    private Claims CheckAuthorization(String authorization, List<AuthorizationService.Role> roles) {
         try {
             return authorizationService.checkAuthorization(authorization, roles);
         } catch (Unauthenticated e) {

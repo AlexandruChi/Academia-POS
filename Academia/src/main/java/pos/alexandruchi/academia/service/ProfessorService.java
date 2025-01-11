@@ -2,12 +2,14 @@ package pos.alexandruchi.academia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.model.Professor;
 import pos.alexandruchi.academia.repository.LectureRepository;
 import pos.alexandruchi.academia.repository.ProfessorRepository;
-
+import pos.alexandruchi.academia.converter.types.*;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -22,19 +24,27 @@ public class ProfessorService {
         this.lectureRepository = lectureRepository;
     }
 
-    public Iterable<Professor> getProfessors() {
-        return professorRepository.findAll();
+    public Page<Professor> getProfessors() {
+        return getProfessors(Pageable.unpaged());
     }
 
-    public Iterable<Professor> getProfessors(String lastNameStart, String rank) {
+    public Page<Professor> getProfessors(Pageable pageable) {
+        return getProfessors(pageable, null, null);
+    }
+
+    public Page<Professor> getProfessors(String lastNameStart, TeachingDegree rank) {
+        return getProfessors(Pageable.unpaged(), lastNameStart, rank);
+    }
+
+    public Page<Professor> getProfessors(Pageable pageable, String lastNameStart, TeachingDegree rank) {
         if (lastNameStart == null && rank == null) {
-            return getProfessors();
+            return professorRepository.findAll(pageable);
         } else if (lastNameStart == null) {
-            return professorRepository.findAllByTeachingDegree(rank);
+            return professorRepository.findAllByTeachingDegree(rank, pageable);
         } else if (rank == null) {
-            return professorRepository.findAllByLastNameStartsWith(lastNameStart);
+            return professorRepository.findAllByLastNameStartsWith(lastNameStart, pageable);
         } else {
-            return professorRepository.findAllByTeachingDegreeAndLastNameStartsWith(rank, lastNameStart);
+            return professorRepository.findAllByTeachingDegreeAndLastNameStartsWith(rank, lastNameStart, pageable);
         }
     }
 
