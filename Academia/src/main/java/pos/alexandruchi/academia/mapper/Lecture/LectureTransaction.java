@@ -6,7 +6,9 @@ import org.springframework.stereotype.Component;
 import pos.alexandruchi.academia.DTO.LectureDTO;
 import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.service.ProfessorService;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.ExaminationType;
+import pos.alexandruchi.academia.types.LectureCategory;
+import pos.alexandruchi.academia.types.LectureType;
 
 @Component
 public class LectureTransaction {

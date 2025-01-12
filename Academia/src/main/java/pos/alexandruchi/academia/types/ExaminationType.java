@@ -1,4 +1,4 @@
-package pos.alexandruchi.academia.converter.types;
+package pos.alexandruchi.academia.types;
 
 import java.util.Objects;
 import java.util.stream.Stream;

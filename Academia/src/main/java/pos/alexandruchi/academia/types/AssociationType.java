@@ -1,16 +1,16 @@
-package pos.alexandruchi.academia.converter.types;
+package pos.alexandruchi.academia.types;
 
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public enum LectureCategory {
-    field("domeniu"),
-    specialty("specialitate"),
-    adjacency("adiacență");
+public enum AssociationType {
+    holder("titular"),
+    associate("asociat"),
+    external("extern");
 
     private final String value;
 
-    LectureCategory(String value) {
+    AssociationType(String value) {
         this.value = value;
     }
 
@@ -19,8 +19,8 @@ public enum LectureCategory {
         return value;
     }
 
-    public static LectureCategory of(String value) {
-        return Stream.of(LectureCategory.values())
+    public static AssociationType of(String value) {
+        return Stream.of(AssociationType.values())
                 .filter(p -> Objects.equals(p.toString(), value))
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new);

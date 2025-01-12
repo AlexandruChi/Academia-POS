@@ -1,5 +1,8 @@
 package pos.alexandruchi.academia.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -16,9 +19,15 @@ import pos.alexandruchi.academia.service.AuthorizationService;
 import pos.alexandruchi.academia.service.ProfessorService;
 import pos.alexandruchi.academia.service.AuthorizationService.Role;
 import pos.alexandruchi.academia.service.AuthorizationService.Claims;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.LectureCategory;
+import pos.alexandruchi.academia.types.LectureType;
+import pos.alexandruchi.academia.types.TeachingDegree;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static pos.alexandruchi.academia.utilclass.LinkUtil.createLink;
 
 @RestController
 @RequestMapping(ProfessorController.path)
@@ -45,12 +54,17 @@ public class ProfessorController {
     }
 
     @GetMapping
-    public List<Map<String, Object>> getProfessors(
+    public ObjectNode getProfessors(
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestParam(value = "academic_rank", required = false) String academicRank,
-            @RequestParam(value = "name", required = false) String lastNameStart
+            @RequestParam(value = "name", required = false) String lastNameStart,
+            HttpServletRequest request
     ) {
-        CheckAuthorization(authorization, List.of(Role.ADMIN));
+        Claims claims = CheckAuthorization(authorization, List.of(
+                Role.STUDENT, Role.PROFESSOR, Role.ADMIN
+        ));
+
+        /* Request parameters */
 
         TeachingDegree teachingDegree = null;
 
@@ -62,30 +76,104 @@ public class ProfessorController {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
-        List<Map<String, Object>> professors = new ArrayList<>();
+        /* Professor List */
+
+        List<Map<String, Object>> list = new ArrayList<>();
         for (Professor professor : professorService.getProfessors(lastNameStart, teachingDegree)) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", professor.getId());
             map.put("professor", professorMapper.toDTO(professor));
-            professors.add(map);
+            list.add(map);
         }
 
-        return professors;
+        /* Response */
+
+        String URI = request.getRequestURI();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode professorsJSON = objectMapper.createObjectNode();
+
+        if (teachingDegree != null) {
+            professorsJSON.put("academic_rank", teachingDegree.toString());
+        }
+
+        if (lastNameStart != null) {
+            professorsJSON.put("name", lastNameStart);
+        }
+
+        professorsJSON.set("list", objectMapper.valueToTree(list));
+
+        Map<String, Object> query = new HashMap<>();
+        query.put("academic_rank", Stream.of(
+                TeachingDegree.values()).map(TeachingDegree::toString).collect(Collectors.toList()
+        ));
+
+        query.put("name", "name beginning");
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, query));
+
+        links.put("professor", createLink(URI + "/{id}", "GET", null));
+        links.put("lectures", createLink(URI + "/{id}/lectures", "GET", null));
+
+        if (claims.role() == Role.ADMIN) {
+            links.put("create", createLink(URI, "POST", null));
+            if (!list.isEmpty()) {
+                links.put("delete", createLink(URI + "/{id}", "DELETE", null));
+            }
+        }
+
+        professorsJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.set("professors", professorsJSON);
+
+        return ret;
     }
 
     @GetMapping("/{id}")
-    public ProfessorDTO getProfessor(
-            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization
+    public ObjectNode getProfessor(
+            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
+            HttpServletRequest request
     ) {
-        CheckAuthorization(authorization, List.of(Role.ADMIN));
+        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.PROFESSOR, Role.STUDENT));
+        ProfessorDTO dto;
+
+        /* Professor */
 
         try {
-            return professorMapper.toDTO(professorService.getProfessor(Integer.valueOf(id)).orElseThrow(
+            dto = professorMapper.toDTO(professorService.getProfessor(Integer.valueOf(id)).orElseThrow(
                     NumberFormatException::new
             ));
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
+
+        /* Response */
+
+        String URI = request.getRequestURI();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode professorJSON = objectMapper.valueToTree(dto);
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, null));
+        links.put("lectures", createLink(URI + "/lectures", "GET", null));
+
+        if (claims.role() == Role.ADMIN) {
+            links.put("delete", createLink(URI, "DELETE", null));
+        }
+
+        professorJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.set("student", professorJSON);
+
+        return ret;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
@@ -121,34 +209,55 @@ public class ProfessorController {
     }
 
     @GetMapping("/{id}/lectures")
-    public List<Map<String, Object>> getProfessorLectures(
-            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization
+    public ObjectNode getProfessorLectures(
+            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
+            HttpServletRequest request
     ) {
-        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.STUDENT));
+        CheckAuthorization(authorization, List.of(Role.PROFESSOR, Role.ADMIN, Role.STUDENT));
         Professor professor;
 
+        /* Professor */
+
         try {
-            if (!Objects.equals((
-                    professor = professorService.getProfessor(Integer.valueOf(id)).orElseThrow(
-                            NumberFormatException::new
-                    )
-            ).getEmail(), claims.email())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
+            professor = professorService.getProfessor(Integer.valueOf(id)).orElseThrow(NumberFormatException::new);
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        List<Map<String, Object>> lectures = new ArrayList<>();
-
+        List<Map<String, Object>> list = new ArrayList<>();
         for (Lecture lecture : professorService.getLectures(professor)) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("code", lecture.getId());
             map.put("lecture", lectureMapper.toDTO(lecture));
-            lectures.add(map);
+            list.add(map);
         }
 
-        return lectures;
+        /* Response */
+
+        String URI = request.getRequestURI();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode lecturesJSON = objectMapper.createObjectNode();
+        lecturesJSON.put("professor", professor.getId());
+        lecturesJSON.set("list", objectMapper.valueToTree(list));
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, null));
+
+        if (!list.isEmpty()) {
+            links.put("lecture", createLink(
+                    context + LectureController.path + "/{code}", "GET", null
+            ));
+        }
+
+        lecturesJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.set("lectures", lecturesJSON);
+
+        return ret;
     }
 
     /// Check if user has the required role and sends response appropriate code otherwise

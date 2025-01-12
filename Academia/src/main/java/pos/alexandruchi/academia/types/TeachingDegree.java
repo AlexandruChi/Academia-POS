@@ -1,15 +1,18 @@
-package pos.alexandruchi.academia.converter.types;
+package pos.alexandruchi.academia.types;
 
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public enum StudyCycle {
-    bachelor("licență"),
-    master("master");
+@SuppressWarnings("SpellCheckingInspection")
+public enum TeachingDegree {
+    asistent("asist"),
+    lecturer("șef lucr"),
+    reader("conf"),
+    professor("prof");
 
     private final String value;
 
-    StudyCycle(String value) {
+    TeachingDegree(String value) {
         this.value = value;
     }
 
@@ -18,8 +21,8 @@ public enum StudyCycle {
         return value;
     }
 
-    public static StudyCycle of(String value) {
-        return Stream.of(StudyCycle.values())
+    public static TeachingDegree of(String value) {
+        return Stream.of(TeachingDegree.values())
                 .filter(p -> Objects.equals(p.toString(), value))
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new);

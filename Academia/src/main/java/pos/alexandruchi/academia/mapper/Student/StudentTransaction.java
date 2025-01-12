@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Component;
 import pos.alexandruchi.academia.DTO.StudentDTO;
 import pos.alexandruchi.academia.model.Student;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.StudyCycle;
 
 @Component
 public class StudentTransaction {

@@ -10,7 +10,9 @@ import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.model.Student;
 import pos.alexandruchi.academia.repository.JoinDSRepository;
 import pos.alexandruchi.academia.repository.LectureRepository;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.LectureCategory;
+import pos.alexandruchi.academia.types.LectureType;
+
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 

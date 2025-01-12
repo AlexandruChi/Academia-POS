@@ -12,17 +12,17 @@ public class JoinDSId implements java.io.Serializable {
     @Serial
     private static final long serialVersionUID = -490483343631178249L;
     @Column(name = "DisciplineID", nullable = false, length = 100)
-    private String disciplineID;
+    private String lectureID;
 
     @Column(name = "StudentID", nullable = false)
     private Integer studentID;
 
-    public String getDisciplineID() {
-        return disciplineID;
+    public String getLectureID() {
+        return lectureID;
     }
 
-    public void setDisciplineID(String disciplineID) {
-        this.disciplineID = disciplineID;
+    public void setLectureID(String lectureID) {
+        this.lectureID = lectureID;
     }
 
     public Integer getStudentID() {
@@ -33,20 +33,18 @@ public class JoinDSId implements java.io.Serializable {
         this.studentID = studentID;
     }
 
-    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         JoinDSId entity = (JoinDSId) o;
         return Objects.equals(this.studentID, entity.studentID) &&
-                Objects.equals(this.disciplineID, entity.disciplineID);
+                Objects.equals(this.lectureID, entity.lectureID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(studentID, disciplineID);
+        return Objects.hash(studentID, lectureID);
     }
 
 }

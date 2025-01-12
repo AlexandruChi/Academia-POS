@@ -2,7 +2,8 @@ package pos.alexandruchi.academia.model;
 
 import jakarta.persistence.*;
 
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.AssociationType;
+import pos.alexandruchi.academia.types.TeachingDegree;
 
 @Entity
 @Table(name = "professors")

@@ -6,7 +6,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import pos.alexandruchi.academia.model.Lecture;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.LectureCategory;
+import pos.alexandruchi.academia.types.LectureType;
 
 @Repository
 public interface LectureRepository

@@ -9,7 +9,8 @@ import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.model.Professor;
 import pos.alexandruchi.academia.repository.LectureRepository;
 import pos.alexandruchi.academia.repository.ProfessorRepository;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.TeachingDegree;
+
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 

@@ -1,5 +1,8 @@
 package pos.alexandruchi.academia.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -18,6 +21,8 @@ import pos.alexandruchi.academia.service.LectureService;
 import pos.alexandruchi.academia.service.StudentService;
 import pos.alexandruchi.academia.service.AuthorizationService.Role;
 import pos.alexandruchi.academia.service.AuthorizationService.Claims;
+
+import static pos.alexandruchi.academia.utilclass.LinkUtil.createLink;
 
 import java.util.*;
 
@@ -50,50 +55,113 @@ public class StudentController {
     }
 
     @GetMapping()
-    public List<Map<String, Object>> getStudents(
-            @RequestHeader(value = "Authorization", required = false) String authorization
+    public ObjectNode getStudents(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            HttpServletRequest request
     ) {
-        CheckAuthorization(authorization, List.of(Role.ADMIN));
+        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.PROFESSOR));
 
-        List<Map<String, Object>> students = new ArrayList<>();
+        /* Student list */
 
+        List<Map<String, Object>> list = new ArrayList<>();
         for (Student student : studentService.getStudents()) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", student.getId());
             map.put("student", studentMapper.toDTO(student));
-            students.add(map);
+            list.add(map);
         }
 
-        return students;
+        /* Response */
+
+        String URI = request.getRequestURI();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode studentsJSON = objectMapper.createObjectNode();
+        studentsJSON.set("list", objectMapper.valueToTree(list));
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, null));
+
+        if (!list.isEmpty()) {
+            links.put("student", createLink(URI + "/{id}", "GET", null));
+            links.put("lectures", createLink(URI + "{id}/lectures", "GET", null));
+        }
+
+        if (claims.role() == Role.ADMIN) {
+            links.put("create", createLink(URI, "POST", null));
+            if (!list.isEmpty()) {
+                links.put("delete", createLink(URI + "/{id}", "DELETE", null));
+            }
+        }
+
+        studentsJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.set("students", studentsJSON);
+
+        return ret;
     }
 
     @GetMapping("/{id}")
-    public StudentDTO getStudent(
-            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization
+    public ObjectNode getStudent(
+            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
+            HttpServletRequest request
     ) {
-        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.STUDENT));
+        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.STUDENT, Role.PROFESSOR));
         Student student;
 
+        /* Student */
+
         try {
-            if (!Objects.equals((
-                    student = studentService.getStudent(Integer.valueOf(id)).orElseThrow(NumberFormatException::new)
-            ).getEmail(), claims.email())) {
+            student = studentService.getStudent(Integer.valueOf(id)).orElseThrow(NumberFormatException::new);
+            if (claims.role() == Role.STUDENT && !Objects.equals(student.getEmail(), claims.email())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        return studentMapper.toDTO(student);
+        StudentDTO dto = studentMapper.toDTO(student);
+
+        /* Response */
+
+        String URI = request.getRequestURI();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode studentsJSON = objectMapper.valueToTree(dto);
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, null));
+        links.put("lectures", createLink(URI + "/lectures", "GET", null));
+
+        if (claims.role() == Role.ADMIN) {
+            links.put("enroll", createLink(URI + "/lectures?code={lecture}", "POST", null));
+            links.put("delete", createLink(URI, "DELETE", null));
+        }
+
+        studentsJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.set("student", studentsJSON);
+
+        return ret;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = "application/json")
-    public StudentDTO addStudent(
+    public ObjectNode addStudent(
             @RequestBody(required = false) StudentDTO studentDTO,
-            @RequestHeader(value = "Authorization", required = false) String authorization
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            HttpServletRequest request
     ) {
         CheckAuthorization(authorization, List.of(Role.ADMIN));
+
+        /* Create Student */
+
         Student student = studentService.setStudent(
                 studentMapper.toEntity(studentDTO)
         );
@@ -102,7 +170,30 @@ public class StudentController {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
 
-        return studentMapper.toDTO(student);
+        StudentDTO dto = studentMapper.toDTO(student);
+
+        /* Response */
+
+        String URI = request.getRequestURI() + "/" + student.getId();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode studentsJSON = objectMapper.valueToTree(dto);
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, null));
+        links.put("lectures", createLink(URI + "/lectures", "GET", null));
+        links.put("enroll", createLink(URI + "/lectures?code={lecture}", "POST", null));
+        links.put("delete", createLink(URI, "DELETE", null));
+
+        studentsJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.put("id", student.getId());
+        ret.set("student", studentsJSON);
+
+        return ret;
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -120,53 +211,90 @@ public class StudentController {
     }
 
     @GetMapping("/{id}/lectures")
-    public List<Map<String, Object>> getStudentLectures(
-            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization
+    public ObjectNode getStudentLectures(
+            @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
+            HttpServletRequest request
     ) {
         Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.STUDENT));
         Student student;
 
+        /* Lectures */
+
         try {
-            if (!Objects.equals((
-                    student = studentService.getStudent(Integer.valueOf(id)).orElseThrow(NumberFormatException::new)
-            ).getEmail(), claims.email())) {
+            student = studentService.getStudent(Integer.valueOf(id)).orElseThrow(NumberFormatException::new);
+            if (claims.role() == Role.STUDENT && !Objects.equals(student.getEmail(), claims.email())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
-        List<Map<String, Object>> lectures = new ArrayList<>();
-
+        List<Map<String, Object>> list = new ArrayList<>();
         for (Lecture lecture : studentService.getLectures(student)) {
             Map<String, Object> map = new HashMap<>();
             map.put("code", lecture.getId());
             map.put("lecture", lectureMapper.toDTO(lecture));
-            lectures.add(map);
+            list.add(map);
         }
 
-        return lectures;
+        /* Response */
+
+        String URI = request.getRequestURI();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode lecturesJSON = objectMapper.createObjectNode();
+        lecturesJSON.put("student", student.getId());
+        lecturesJSON.set("list", objectMapper.valueToTree(list));
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, null));
+
+        if (!list.isEmpty()) {
+            links.put("lecture", createLink(
+                    context + LectureController.path + "/{code}", "GET", null
+            ));
+        }
+
+        if (claims.role() == Role.ADMIN) {
+            links.put("add_lecture", createLink(URL + "?code={code}", "POST", null
+            ));
+
+            if (!list.isEmpty()) {
+                links.put("remove_lecture", createLink(URL + "/{code}", "DELETE", null
+                ));
+            }
+        }
+
+        lecturesJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.set("lectures", lecturesJSON);
+
+        return ret;
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/{id}/lectures")
-    public List<Map<String, Object>> addStudentLecture(
+    public void addStudentLecture(
             @PathVariable String id, @RequestParam(required = false) String code,
             @RequestHeader(value = "Authorization", required = false) String authorization
     ) {
         CheckAuthorization(authorization, List.of(Role.ADMIN));
 
         try {
-            enrollService.enroll(
+            if (!enrollService.enroll(
                     studentService.getStudent(Integer.valueOf(id)).orElseThrow(NumberFormatException::new),
                     lectureService.getLecture(code).orElseThrow(IllegalArgumentException::new)
-            );
+            )) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT);
+            }
         } catch (NumberFormatException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        } catch (NoSuchElementException e) {
+        } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
         }
-
-        return getStudentLectures(id, authorization);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

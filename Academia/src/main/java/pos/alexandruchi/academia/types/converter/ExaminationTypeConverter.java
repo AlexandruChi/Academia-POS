@@ -1,8 +1,8 @@
-package pos.alexandruchi.academia.converter;
+package pos.alexandruchi.academia.types.converter;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.ExaminationType;
 
 @Converter(autoApply = true)
 public class ExaminationTypeConverter implements AttributeConverter<ExaminationType, String> {

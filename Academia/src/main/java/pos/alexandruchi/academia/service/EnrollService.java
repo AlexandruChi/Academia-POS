@@ -1,6 +1,7 @@
 package pos.alexandruchi.academia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.JoinDSId;
 import pos.alexandruchi.academia.model.JoinDS;
@@ -25,19 +26,27 @@ public class EnrollService {
 
         JoinDSId joinDSId = new JoinDSId();
         joinDSId.setStudentID(student.getId());
-        joinDSId.setDisciplineID(lecture.getId());
+        joinDSId.setLectureID(lecture.getId());
         return joinDSRepository.existsById(joinDSId);
     }
 
-    public void enroll(Student student, Lecture lecture) {
+    public boolean enroll(Student student, Lecture lecture) {
         if (student == null || lecture == null) {
-            return;
+            throw new IllegalArgumentException();
         }
 
         JoinDS joinDS = new JoinDS();
+        joinDS.setId(new JoinDSId());
         joinDS.setStudentID(student);
         joinDS.setLectureID(lecture);
-        joinDSRepository.save(joinDS);
+
+        try {
+            joinDSRepository.save(joinDS);
+        } catch (DataIntegrityViolationException e) {
+            return false;
+        }
+
+        return true;
     }
 
     public void unenroll(Student student, Lecture lecture) {

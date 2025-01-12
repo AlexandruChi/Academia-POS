@@ -21,10 +21,14 @@ import pos.alexandruchi.academia.service.*;
 import pos.alexandruchi.academia.service.AuthorizationService.Role;
 import pos.alexandruchi.academia.service.AuthorizationService.Claims;
 import org.springframework.data.domain.Pageable;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.LectureCategory;
+import pos.alexandruchi.academia.types.LectureType;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static pos.alexandruchi.academia.utilclass.LinkUtil.createLink;
 
 @RestController
 @RequestMapping(LectureController.path)
@@ -56,7 +60,7 @@ public class LectureController {
     public ObjectNode getLectures(
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestParam(required = false) String type, @RequestParam(required = false) String category,
-            @RequestParam(value = "page_items", defaultValue = "10") String pageItems,
+            @RequestParam(value = "page_items", defaultValue = "2") String pageItems,
             @RequestParam(required = false) String page, HttpServletRequest request
             ) {
         Claims claims = CheckAuthorization(authorization, List.of(
@@ -66,11 +70,19 @@ public class LectureController {
         /* Request parameters */
 
         Pageable pageable = Pageable.unpaged();
-        int pageNumber = -1;
+        int pageNumber = 0;
         if (page != null) {
             try {
-                pageNumber = Integer.parseInt(page);
-                pageable = PageRequest.of(pageNumber, Integer.parseInt(pageItems));
+                if ((pageNumber = Integer.parseInt(page)) < 0) {
+                    throw new NumberFormatException();
+                }
+
+                int items = Integer.parseInt(pageItems);
+                if (items <= 0) {
+                    throw new NumberFormatException();
+                }
+
+                pageable = PageRequest.of(pageNumber, items);
             } catch (NumberFormatException e) {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
             }
@@ -96,13 +108,13 @@ public class LectureController {
         Page<Lecture> lecturesPage = lectureService.getLectures(pageable, lectureType, lectureCategory);
         List<Map<String, Object>> list = new ArrayList<>();
         for (Lecture lecture : lecturesPage) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("code", lecture.getId());
             map.put("lecture", lectureMapper.toDTO(lecture));
             list.add(map);
         }
 
-        if (list.isEmpty() && (pageNumber != -1)) {
+        if (list.isEmpty() && (pageNumber != 0)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
@@ -114,9 +126,18 @@ public class LectureController {
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode lecturesJSON = objectMapper.createObjectNode();
+
+        if (lectureType != null) {
+            lecturesJSON.put("type", lectureType.toString());
+        }
+
+        if (lectureCategory != null) {
+            lecturesJSON.put("category", lectureCategory.toString());
+        }
+
         lecturesJSON.set("list", objectMapper.valueToTree(list));
 
-        Map<String, List<Object>> query = new HashMap<>();
+        Map<String, Object> query = new HashMap<>();
         query.put("type", Stream.of(
                 LectureType.values()).map(LectureType::toString).collect(Collectors.toList()
         ));
@@ -147,7 +168,17 @@ public class LectureController {
         ));
 
         if (List.of(Role.PROFESSOR, Role.ADMIN).contains(claims.role())) {
-            links.put("students", createLink(URI + "{code}/students", "GET", null));
+            links.put("students", createLink(URI + "/{code}/students", "GET", null));
+        }
+
+        if (claims.role() == Role.ADMIN) {
+            links.put("create" + ((list.isEmpty()) ? "" : " / modify"), createLink(
+                    URI + "/{code}", "PUT", null
+            ));
+
+            if (!list.isEmpty()) {
+                links.put("delete", createLink(URI + "/{code}", "DELETE", null));
+            }
         }
 
         lecturesJSON.set("_links", objectMapper.valueToTree(links));
@@ -267,7 +298,7 @@ public class LectureController {
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND)
                 )
         )) {
-            Map<String, Object> map = new HashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", student.getId());
             map.put("student", studentMapper.toDTO(student));
             list.add(map);
@@ -281,6 +312,7 @@ public class LectureController {
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode studentsJSON = objectMapper.createObjectNode();
+        studentsJSON.put("lecture", code);
         studentsJSON.set("list", objectMapper.valueToTree(list));
 
         Map<String, Object> links = new LinkedHashMap<>();
@@ -312,25 +344,6 @@ public class LectureController {
         ret.set("students", studentsJSON);
 
         return ret;
-    }
-
-    private Map<String, Object> createLink(String link, String method, Map<String, List<Object>> query) {
-        if (link == null) {
-            return null;
-        }
-
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("href", link);
-
-        if (method != null) {
-            map.put("type", method);
-        }
-
-        if (query != null) {
-            map.put("query", query);
-        }
-
-        return map;
     }
 
     /// Check if user has the required role and sends response appropriate code otherwise

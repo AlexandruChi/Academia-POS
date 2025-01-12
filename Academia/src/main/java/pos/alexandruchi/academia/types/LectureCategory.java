@@ -1,16 +1,16 @@
-package pos.alexandruchi.academia.converter.types;
+package pos.alexandruchi.academia.types;
 
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public enum LectureType {
-    mandatory("impusă"),
-    optional("opțională"),
-    freelyChosen("liber_aleasă");
+public enum LectureCategory {
+    field("domeniu"),
+    specialty("specialitate"),
+    adjacency("adiacență");
 
     private final String value;
 
-    LectureType(String value) {
+    LectureCategory(String value) {
         this.value = value;
     }
 
@@ -19,8 +19,8 @@ public enum LectureType {
         return value;
     }
 
-    public static LectureType of(String value) {
-        return Stream.of(LectureType.values())
+    public static LectureCategory of(String value) {
+        return Stream.of(LectureCategory.values())
                 .filter(p -> Objects.equals(p.toString(), value))
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new);

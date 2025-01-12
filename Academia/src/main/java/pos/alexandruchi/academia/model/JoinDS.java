@@ -19,7 +19,7 @@ public class JoinDS {
         this.id = id;
     }
 
-    @MapsId("disciplineID")
+    @MapsId("lectureID")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "DisciplineID", nullable = false)
     public Lecture getLectureID() {

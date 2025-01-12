@@ -7,7 +7,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 import pos.alexandruchi.academia.model.Professor;
 
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.TeachingDegree;
 
 import java.util.Optional;
 

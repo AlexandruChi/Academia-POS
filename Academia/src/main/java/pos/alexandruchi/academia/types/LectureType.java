@@ -1,16 +1,16 @@
-package pos.alexandruchi.academia.converter.types;
+package pos.alexandruchi.academia.types;
 
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public enum AssociationType {
-    holder("titular"),
-    associate("asociat"),
-    external("extern");
+public enum LectureType {
+    mandatory("impusă"),
+    optional("opțională"),
+    freelyChosen("liber_aleasă");
 
     private final String value;
 
-    AssociationType(String value) {
+    LectureType(String value) {
         this.value = value;
     }
 
@@ -19,8 +19,8 @@ public enum AssociationType {
         return value;
     }
 
-    public static AssociationType of(String value) {
-        return Stream.of(AssociationType.values())
+    public static LectureType of(String value) {
+        return Stream.of(LectureType.values())
                 .filter(p -> Objects.equals(p.toString(), value))
                 .findFirst()
                 .orElseThrow(IllegalArgumentException::new);

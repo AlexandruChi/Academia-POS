@@ -2,7 +2,9 @@ package pos.alexandruchi.academia.model;
 
 import jakarta.persistence.*;
 
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.ExaminationType;
+import pos.alexandruchi.academia.types.LectureCategory;
+import pos.alexandruchi.academia.types.LectureType;
 
 @Entity
 @Table(name = "lectures")

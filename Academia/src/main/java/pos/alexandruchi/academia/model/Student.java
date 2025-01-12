@@ -1,7 +1,7 @@
 package pos.alexandruchi.academia.model;
 
 import jakarta.persistence.*;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.StudyCycle;
 
 @Entity
 @Table(name = "students")

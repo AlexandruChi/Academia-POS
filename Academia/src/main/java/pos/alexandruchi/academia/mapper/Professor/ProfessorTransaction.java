@@ -4,7 +4,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Component;
 import pos.alexandruchi.academia.DTO.ProfessorDTO;
 import pos.alexandruchi.academia.model.Professor;
-import pos.alexandruchi.academia.converter.types.*;
+import pos.alexandruchi.academia.types.AssociationType;
+import pos.alexandruchi.academia.types.TeachingDegree;
 
 @Component
 public class ProfessorTransaction {
