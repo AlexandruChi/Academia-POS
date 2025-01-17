@@ -28,6 +28,40 @@ class Academia:
 
         return await self.check_user_lecture(claims, lecture)
 
+    async def get_lecture_examination(self, lecture: str) -> str | None:
+        tries = 2
+
+        try:
+            while tries > 0:
+                tries -= 1
+
+                response = await httpx.AsyncClient().get(
+                    f'{PROTOCOL}{config.ACADEMIA_HOST}/api/academia/lectures/{lecture}',
+                    headers={'authorization': f'Bearer {self.token}'}
+                )
+
+                if response.status_code == status.HTTP_401_UNAUTHORIZED:
+                    self.__init__()
+                    continue
+
+                if response.status_code == status.HTTP_404_NOT_FOUND:
+                    return None
+
+                if response.status_code != status.HTTP_200_OK:
+                    break
+
+                json = response.json()
+
+                try:
+                    return json['lecture']['examinationType']
+                except AttributeError:
+                    break
+
+        except httpx.ConnectError:
+            pass
+
+        raise ServiceException()
+
     async def check_user_lecture(self, claims: dict, lecture: str) -> bool | None:
         tries = 2
 
@@ -39,54 +73,58 @@ class Academia:
             case _:
                 return None
 
-        while tries > 0:
-            tries -= 1
+        try:
+            while tries > 0:
+                tries -= 1
 
-            response = await httpx.AsyncClient().get(
-                f'{PROTOCOL}{config.ACADEMIA_HOST}/api/academia/{container}?email={claims["email"]}',
-                headers={'authorization': f'Bearer {self.token}'}
-            )
+                response = await httpx.AsyncClient().get(
+                    f'{PROTOCOL}{config.ACADEMIA_HOST}/api/academia/{container}?email={claims["email"]}',
+                    headers={'authorization': f'Bearer {self.token}'}
+                )
 
-            if response.status_code == status.HTTP_401_UNAUTHORIZED:
-                self.__init__()
-                continue
+                if response.status_code == status.HTTP_401_UNAUTHORIZED:
+                    self.__init__()
+                    continue
 
-            if response.status_code != status.HTTP_200_OK:
-                break
+                if response.status_code != status.HTTP_200_OK:
+                    break
 
-            json = response.json()
+                json = response.json()
 
-            try:
-                student_list = json[container]['list']
-                if len(student_list) != 1:
-                    raise AttributeError()
+                try:
+                    student_list = json[container]['list']
+                    if len(student_list) != 1:
+                        raise AttributeError()
 
-                student_id = student_list[0]['id']
-                lectures_link = json[container]['_links']['lectures']
-                lectures_path = lectures_link['href'].replace('{id}', str(student_id))
-                if lectures_link['type'] != 'GET':
-                    raise AttributeError()
+                    student_id = student_list[0]['id']
+                    lectures_link = json[container]['_links']['lectures']
+                    lectures_path = lectures_link['href'].replace('{id}', str(student_id))
+                    if lectures_link['type'] != 'GET':
+                        raise AttributeError()
 
-            except AttributeError:
-                break
+                except AttributeError:
+                    break
 
-            response = await httpx.AsyncClient().get(
-                f'{PROTOCOL}{config.ACADEMIA_HOST}{lectures_path}',
-                headers={'authorization': f'Bearer {self.token}'}
-            )
+                response = await httpx.AsyncClient().get(
+                    f'{PROTOCOL}{config.ACADEMIA_HOST}{lectures_path}',
+                    headers={'authorization': f'Bearer {self.token}'}
+                )
 
-            if response.status_code == status.HTTP_401_UNAUTHORIZED:
-                self.__init__()
-                continue
+                if response.status_code == status.HTTP_401_UNAUTHORIZED:
+                    self.__init__()
+                    continue
 
-            if response.status_code != status.HTTP_200_OK:
-                break
+                if response.status_code != status.HTTP_200_OK:
+                    break
 
-            json = response.json()
+                json = response.json()
 
-            try:
-                return lecture in [x['code'] for x in json['lectures']['list']]
-            except AttributeError:
-                break
+                try:
+                    return lecture in [x['code'] for x in json['lectures']['list']]
+                except AttributeError:
+                    break
+
+        except httpx.ConnectError:
+            pass
 
         raise ServiceException()
