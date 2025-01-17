@@ -1,2 +1,9 @@
 pymongo~=4.10.1
 fastapi~=0.115.4
+grpcio~=1.68.1
+protobuf~= 5.29.1
+grpcio-tools
+types-protobuf
+PyJWT~=2.10.1
+httpx~=0.28.1
+uvicorn

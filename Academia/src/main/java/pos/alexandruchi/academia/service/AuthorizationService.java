@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public class AuthorizationService {
 
-    public enum Role {ADMIN, STUDENT, PROFESSOR}
+    public enum Role {ADMIN, SERVICE, STUDENT, PROFESSOR}
 
     public record Claims(String email, Role role) {}
 

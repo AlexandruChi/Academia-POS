@@ -19,8 +19,6 @@ import pos.alexandruchi.academia.service.AuthorizationService;
 import pos.alexandruchi.academia.service.ProfessorService;
 import pos.alexandruchi.academia.service.AuthorizationService.Role;
 import pos.alexandruchi.academia.service.AuthorizationService.Claims;
-import pos.alexandruchi.academia.types.LectureCategory;
-import pos.alexandruchi.academia.types.LectureType;
 import pos.alexandruchi.academia.types.TeachingDegree;
 
 import java.util.*;
@@ -58,10 +56,11 @@ public class ProfessorController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestParam(value = "academic_rank", required = false) String academicRank,
             @RequestParam(value = "name", required = false) String lastNameStart,
+            @RequestParam(required = false) String email,
             HttpServletRequest request
     ) {
         Claims claims = CheckAuthorization(authorization, List.of(
-                Role.STUDENT, Role.PROFESSOR, Role.ADMIN
+                Role.STUDENT, Role.SERVICE, Role.PROFESSOR, Role.ADMIN
         ));
 
         /* Request parameters */
@@ -77,9 +76,8 @@ public class ProfessorController {
         }
 
         /* Professor List */
-
         List<Map<String, Object>> list = new ArrayList<>();
-        for (Professor professor : professorService.getProfessors(lastNameStart, teachingDegree)) {
+        for (Professor professor : professorService.getProfessors(lastNameStart, teachingDegree, email)) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", professor.getId());
             map.put("professor", professorMapper.toDTO(professor));
@@ -94,6 +92,10 @@ public class ProfessorController {
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode professorsJSON = objectMapper.createObjectNode();
+
+        if (email != null) {
+            professorsJSON.put("email", email);
+        }
 
         if (teachingDegree != null) {
             professorsJSON.put("academic_rank", teachingDegree.toString());
@@ -111,6 +113,7 @@ public class ProfessorController {
         ));
 
         query.put("name", "name beginning");
+        query.put("email", "unique professor email");
 
         Map<String, Object> links = new LinkedHashMap<>();
         links.put("self", createLink(URL, null, query));
@@ -138,7 +141,10 @@ public class ProfessorController {
             @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
             HttpServletRequest request
     ) {
-        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.PROFESSOR, Role.STUDENT));
+        Claims claims = CheckAuthorization(authorization, List.of(
+                Role.ADMIN, Role.SERVICE, Role.PROFESSOR, Role.STUDENT
+        ));
+
         ProfessorDTO dto;
 
         /* Professor */
@@ -213,7 +219,7 @@ public class ProfessorController {
             @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
             HttpServletRequest request
     ) {
-        CheckAuthorization(authorization, List.of(Role.PROFESSOR, Role.ADMIN, Role.STUDENT));
+        CheckAuthorization(authorization, List.of(Role.PROFESSOR, Role.SERVICE, Role.ADMIN, Role.STUDENT));
         Professor professor;
 
         /* Professor */

@@ -3,14 +3,17 @@ package pos.alexandruchi.academia.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.Lecture;
 import pos.alexandruchi.academia.model.Professor;
+import pos.alexandruchi.academia.model.Student;
 import pos.alexandruchi.academia.repository.LectureRepository;
 import pos.alexandruchi.academia.repository.ProfessorRepository;
 import pos.alexandruchi.academia.types.TeachingDegree;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -30,23 +33,44 @@ public class ProfessorService {
     }
 
     public Page<Professor> getProfessors(Pageable pageable) {
-        return getProfessors(pageable, null, null);
+        return getProfessors(pageable, null, null, null);
     }
 
-    public Page<Professor> getProfessors(String lastNameStart, TeachingDegree rank) {
-        return getProfessors(Pageable.unpaged(), lastNameStart, rank);
+
+    public Page<Professor> getProfessors(String lastNameStart, TeachingDegree rank, String email) {
+        return getProfessors(Pageable.unpaged(), lastNameStart, rank, email);
     }
 
-    public Page<Professor> getProfessors(Pageable pageable, String lastNameStart, TeachingDegree rank) {
-        if (lastNameStart == null && rank == null) {
-            return professorRepository.findAll(pageable);
-        } else if (lastNameStart == null) {
-            return professorRepository.findAllByTeachingDegree(rank, pageable);
-        } else if (rank == null) {
-            return professorRepository.findAllByLastNameStartsWith(lastNameStart, pageable);
+    public Page<Professor> getProfessors(Pageable pageable, String lastNameStart, TeachingDegree rank, String email) {
+        if (email == null) {
+            if (lastNameStart == null && rank == null) {
+                return professorRepository.findAll(pageable);
+            } else if (lastNameStart == null) {
+                return professorRepository.findAllByTeachingDegree(rank, pageable);
+            } else if (rank == null) {
+                return professorRepository.findAllByLastNameStartsWith(lastNameStart, pageable);
+            } else {
+                return professorRepository.findAllByTeachingDegreeAndLastNameStartsWith(rank, lastNameStart, pageable);
+            }
         } else {
-            return professorRepository.findAllByTeachingDegreeAndLastNameStartsWith(rank, lastNameStart, pageable);
+            return getProfessorByEmail(email)
+                    .map(p -> {
+                        if (
+                                lastNameStart != null && !p.getLastName().startsWith(lastNameStart) ||
+                                rank != null && p.getTeachingDegree() != rank
+                        ) {
+                            return new PageImpl<Professor>(Collections.emptyList(), pageable, 0);
+                        }
+
+                        return new PageImpl<>(Collections.singletonList(p), pageable, 1);
+                    })
+                    .orElse(new PageImpl<>(Collections.emptyList(), pageable, 0));
+
         }
+    }
+
+    public Optional<Professor> getProfessorByEmail(String email) {
+        return professorRepository.findByEmail(email);
     }
 
     public Optional<Professor> getProfessor(Integer id) {

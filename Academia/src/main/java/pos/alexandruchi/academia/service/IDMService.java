@@ -70,6 +70,7 @@ public class IDMService {
 
             (role = switch (JWT.decode(token).getClaim("role").asString()) {
                 case "admin" -> AuthorizationService.Role.ADMIN;
+                case "service" -> AuthorizationService.Role.SERVICE;
                 case "student" -> AuthorizationService.Role.STUDENT;
                 case "professor" -> AuthorizationService.Role.PROFESSOR;
                 default -> null;

@@ -64,7 +64,7 @@ public class LectureController {
             @RequestParam(required = false) String page, HttpServletRequest request
             ) {
         Claims claims = CheckAuthorization(authorization, List.of(
-                Role.ADMIN, Role.PROFESSOR, Role.STUDENT
+                Role.ADMIN, Role.SERVICE, Role.PROFESSOR, Role.STUDENT
         ));
 
         /* Request parameters */
@@ -195,7 +195,7 @@ public class LectureController {
             HttpServletRequest request
     ) {
         Claims claims = CheckAuthorization(authorization, List.of(
-                Role.ADMIN, Role.PROFESSOR, Role.STUDENT
+                Role.ADMIN, Role.SERVICE, Role.PROFESSOR, Role.STUDENT
         ));
 
         /* Lecture */
@@ -287,7 +287,7 @@ public class LectureController {
             HttpServletRequest request
     ) {
         Claims claims = CheckAuthorization(authorization, List.of(
-                Role.PROFESSOR, Role.ADMIN
+                Role.PROFESSOR, Role.SERVICE, Role.ADMIN
         ));
 
         /* Students */

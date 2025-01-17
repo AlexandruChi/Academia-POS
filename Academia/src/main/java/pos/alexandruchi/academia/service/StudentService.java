@@ -2,6 +2,8 @@ package pos.alexandruchi.academia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pos.alexandruchi.academia.model.JoinDS;
@@ -10,6 +12,8 @@ import pos.alexandruchi.academia.model.Student;
 import pos.alexandruchi.academia.repository.JoinDSRepository;
 import pos.alexandruchi.academia.repository.StudentRepository;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -24,12 +28,30 @@ public class StudentService {
         this.joinDSRepository = joinDSRepository;
     }
 
-    public Iterable<Student> getStudents() {
+    public Page<Student> getStudents() {
         return getStudents(Pageable.unpaged());
     }
 
-    public Iterable<Student> getStudents(Pageable pageable) {
+    public Page<Student> getStudents(Pageable pageable) {
         return studentRepository.findAll(pageable);
+    }
+
+    public Page<Student> getStudents(String email) {
+        return getStudents(Pageable.unpaged(), email);
+    }
+
+    public Page<Student> getStudents(Pageable pageable, String email) {
+        if (email == null) {
+            return studentRepository.findAll(pageable);
+        } else {
+            return getStudentByEmail(email)
+                    .map(s -> new PageImpl<>(Collections.singletonList(s), pageable, 1))
+                    .orElse(new PageImpl<>(Collections.emptyList(), pageable, 0));
+        }
+    }
+
+    public Optional<Student> getStudentByEmail(String email) {
+        return studentRepository.findByEmail(email);
     }
 
     public Optional<Student> getStudent(Integer id) {

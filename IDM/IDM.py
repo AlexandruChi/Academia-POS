@@ -97,8 +97,8 @@ class IDM(IDM_pb2_grpc.IDMServicer):
 
         try:
             stub.Validate(Empty(), metadata=(
-                ('authorization', dict(context.invocation_metadata()).get('authorization')),)
-            )
+                ('authorization', dict(context.invocation_metadata()).get('authorization')),
+            ))
         except Exception as ex:
             context.set_code(grpc.StatusCode.INTERNAL)
 

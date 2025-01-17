@@ -21,10 +21,13 @@ import pos.alexandruchi.academia.service.LectureService;
 import pos.alexandruchi.academia.service.StudentService;
 import pos.alexandruchi.academia.service.AuthorizationService.Role;
 import pos.alexandruchi.academia.service.AuthorizationService.Claims;
+import pos.alexandruchi.academia.types.TeachingDegree;
 
 import static pos.alexandruchi.academia.utilclass.LinkUtil.createLink;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(StudentController.path)
@@ -57,14 +60,14 @@ public class StudentController {
     @GetMapping()
     public ObjectNode getStudents(
             @RequestHeader(value = "Authorization", required = false) String authorization,
-            HttpServletRequest request
+            @RequestParam(required = false) String email, HttpServletRequest request
     ) {
-        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.PROFESSOR));
+        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.SERVICE, Role.PROFESSOR));
 
         /* Student list */
 
         List<Map<String, Object>> list = new ArrayList<>();
-        for (Student student : studentService.getStudents()) {
+        for (Student student : studentService.getStudents(email)) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", student.getId());
             map.put("student", studentMapper.toDTO(student));
@@ -79,14 +82,22 @@ public class StudentController {
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode studentsJSON = objectMapper.createObjectNode();
+
+        if (email != null) {
+            studentsJSON.put("email", email);
+        }
+
         studentsJSON.set("list", objectMapper.valueToTree(list));
 
+        Map<String, Object> query = new HashMap<>();
+        query.put("email", "unique student email");
+
         Map<String, Object> links = new LinkedHashMap<>();
-        links.put("self", createLink(URL, null, null));
+        links.put("self", createLink(URL, null, query));
 
         if (!list.isEmpty()) {
             links.put("student", createLink(URI + "/{id}", "GET", null));
-            links.put("lectures", createLink(URI + "{id}/lectures", "GET", null));
+            links.put("lectures", createLink(URI + "/{id}/lectures", "GET", null));
         }
 
         if (claims.role() == Role.ADMIN) {
@@ -109,7 +120,10 @@ public class StudentController {
             @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
             HttpServletRequest request
     ) {
-        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.STUDENT, Role.PROFESSOR));
+        Claims claims = CheckAuthorization(authorization, List.of(
+                Role.ADMIN, Role.SERVICE, Role.STUDENT, Role.PROFESSOR)
+        );
+
         Student student;
 
         /* Student */
@@ -215,7 +229,7 @@ public class StudentController {
             @PathVariable String id, @RequestHeader(value = "Authorization", required = false) String authorization,
             HttpServletRequest request
     ) {
-        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.STUDENT));
+        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN, Role.SERVICE, Role.STUDENT));
         Student student;
 
         /* Lectures */
