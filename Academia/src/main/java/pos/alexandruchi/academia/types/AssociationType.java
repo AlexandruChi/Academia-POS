@@ -20,6 +20,10 @@ public enum AssociationType {
     }
 
     public static AssociationType of(String value) {
+        if (value == null || value.isBlank()) {
+            return external;
+        }
+
         return Stream.of(AssociationType.values())
                 .filter(p -> Objects.equals(p.toString(), value))
                 .findFirst()

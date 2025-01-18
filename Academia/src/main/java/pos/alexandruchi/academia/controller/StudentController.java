@@ -176,9 +176,16 @@ public class StudentController {
 
         /* Create Student */
 
-        Student student = studentService.setStudent(
-                studentMapper.toEntity(studentDTO)
-        );
+        Student student;
+
+        try {
+            student = studentService.setStudent(
+                    studentMapper.toEntity(studentDTO)
+            );
+
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
 
         if (student == null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
