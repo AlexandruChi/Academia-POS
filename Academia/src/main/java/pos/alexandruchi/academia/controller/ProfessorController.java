@@ -177,18 +177,19 @@ public class ProfessorController {
         professorJSON.set("_links", objectMapper.valueToTree(links));
 
         ObjectNode ret = objectMapper.createObjectNode();
-        ret.set("student", professorJSON);
+        ret.set("professor", professorJSON);
 
         return ret;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping(consumes = "application/json")
-    public ProfessorDTO addProfessor(
+    public ObjectNode addProfessor(
             @RequestBody(required = false) ProfessorDTO professorDTO,
-            @RequestHeader(value = "Authorization", required = false) String authorization
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            HttpServletRequest request
     ) {
-        CheckAuthorization(authorization, List.of(Role.ADMIN));
+        Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN));
         Professor professor = professorService.setProfessor(
                 professorMapper.toEntity(professorDTO)
         );
@@ -197,7 +198,29 @@ public class ProfessorController {
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
 
-        return professorMapper.toDTO(professor);
+        ProfessorDTO dto = professorMapper.toDTO(professor);
+
+        /* Response */
+
+        String URI = request.getRequestURI() + "/" + professor.getId();
+        String queryParameters = request.getQueryString();
+        String URL = URI + ((queryParameters != null) ? ("?" + queryParameters) : "");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode professorJSON = objectMapper.valueToTree(dto);
+
+        Map<String, Object> links = new LinkedHashMap<>();
+        links.put("self", createLink(URL, null, null));
+        links.put("lectures", createLink(URI + "/lectures", "GET", null));
+        links.put("delete", createLink(URI, "DELETE", null));
+
+        professorJSON.set("_links", objectMapper.valueToTree(links));
+
+        ObjectNode ret = objectMapper.createObjectNode();
+        ret.put("id", professor.getId());
+        ret.set("professor", professorJSON);
+
+        return ret;
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

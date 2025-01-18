@@ -15,6 +15,7 @@ class Role(enum.Enum):
     ADMIN = 'admin'
     STUDENT = 'student'
     PROFESSOR = 'professor'
+    SERVICE = 'service'
 
     @staticmethod
     def of(value: str):

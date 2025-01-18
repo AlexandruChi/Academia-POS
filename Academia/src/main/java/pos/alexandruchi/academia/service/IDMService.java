@@ -28,7 +28,7 @@ public class IDMService {
         stub = IDMGrpc.newBlockingStub(channel);
     }
 
-    private Boolean Validate(String token) {
+    public Boolean Validate(String token) {
         if (token == null) {
             return false;
         }
@@ -56,6 +56,44 @@ public class IDMService {
         }
 
         return true;
+    }
+
+    public String Authenticate(String email, String password) {
+        try {
+            return stub.authenticate(IDMOuterClass.login.newBuilder()
+                    .setUsername(email)
+                    .setPassword(password)
+                    .build()
+            ).getToken();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public void Deauthenticate(String token) {
+        if (token == null) {
+            return;
+        }
+
+        CallCredentials callCredentials = new CallCredentials() {
+
+            @Override
+            public void applyRequestMetadata(
+                    RequestInfo requestInfo, Executor executor, MetadataApplier metadataApplier
+            ) {
+                Metadata metadata = new Metadata();
+                Metadata.Key<String> authorization = Metadata.Key.of(
+                        "Authorization", Metadata.ASCII_STRING_MARSHALLER
+                );
+                metadata.put(authorization, "Bearer " + token);
+                metadataApplier.apply(metadata);
+            }
+        };
+
+        try {
+            //noinspection ResultOfMethodCallIgnored
+            stub.withCallCredentials(callCredentials).deauthenticate(Empty.newBuilder().build());
+        } catch (Exception ignored) {}
     }
 
     public AuthorizationService.Claims getClaims(String authorization) {

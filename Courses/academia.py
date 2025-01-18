@@ -36,7 +36,7 @@ class Academia:
                 tries -= 1
 
                 response = await httpx.AsyncClient().get(
-                    f'{PROTOCOL}{config.ACADEMIA_HOST}/api/academia/lectures/{lecture}',
+                    f'{PROTOCOL}{config.ACADEMIA_HOST}{config.ACADEMIA_PATH}/lectures/{lecture}',
                     headers={'authorization': f'Bearer {self.token}'}
                 )
 
@@ -78,7 +78,7 @@ class Academia:
                 tries -= 1
 
                 response = await httpx.AsyncClient().get(
-                    f'{PROTOCOL}{config.ACADEMIA_HOST}/api/academia/{container}?email={claims["email"]}',
+                    f'{PROTOCOL}{config.ACADEMIA_HOST}{config.ACADEMIA_PATH}/{container}?email={claims["email"]}',
                     headers={'authorization': f'Bearer {self.token}'}
                 )
 
@@ -123,6 +123,37 @@ class Academia:
                     return lecture in [x['code'] for x in json['lectures']['list']]
                 except AttributeError:
                     break
+
+        except httpx.ConnectError:
+            pass
+
+        raise ServiceException()
+
+    async def lecture_info_page(self, lecture: str) -> str | None:
+        tries = 2
+
+        try:
+            while tries > 0:
+                tries -= 1
+
+                url = f'{config.ACADEMIA_HOST}{config.ACADEMIA_PATH}/lectures/{lecture}'
+
+                response = await httpx.AsyncClient().get(
+                    f'{PROTOCOL}{url}',
+                    headers={'authorization': f'Bearer {self.token}'}
+                )
+
+                if response.status_code == status.HTTP_401_UNAUTHORIZED:
+                    self.__init__()
+                    continue
+
+                if response.status_code == status.HTTP_404_NOT_FOUND:
+                    return None
+
+                if response.status_code != status.HTTP_200_OK:
+                    break
+
+                return url
 
         except httpx.ConnectError:
             pass

@@ -20,15 +20,55 @@ app = FastAPI(root_path='/api/courses')
 
 academia = Academia()
 
+@app.get('')
+async def get_courses(request: Request, authorization: Annotated[str | None, Header()] = None):
+    check_authorization(authorization, [Role.ADMIN, Role.PROFESSOR])
+
+    query = courses.find({}, {'cod': 1})
+    course_list = []
+    for course in query:
+        course_list.append(course['cod'])
+
+    links = {
+        'self': {
+            'href': f'{str(request.url.path)}{f'?{str(request.url.query)}' if request.url.query else ''}'
+        }
+    }
+
+    if len(course_list) > 0:
+        links['courses'] = {
+            'href': f'{str(request.url.path)}/{{cod}}',
+            'type': 'GET'
+        }
+
+    links['create'] = {
+        'href': f'{str(request.url.path)}?{{cod}}',
+        'type': 'POST'
+    }
+
+    if len(course_list) > 0:
+        links['delete'] = {
+            'href': f'{str(request.url.path)}/{{cod}}',
+            'type': 'DELETE'
+        }
+
+    return JSONResponse({
+        'lectures': {
+            'list': course_list,
+            '_links': links
+        }
+    })
+
+
 @app.get('/{code}')
 async def get_course(code: str, request: Request, authorization: Annotated[str | None, Header()] = None):
-    claims = check_authorization(authorization, [Role.ADMIN, Role.PROFESSOR, Role.STUDENT])
+    claims = check_authorization(authorization, [Role.ADMIN, Role.SERVICE, Role.PROFESSOR, Role.STUDENT])
 
     try:
         if claims['role'] == Role.STUDENT and not await academia.is_student_enrolled(claims, code):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-        course = courses.find_one({'cod': code}, {'files': 0})
+        course = courses.find_one({'cod': code}, {'fișiere': 0})
 
         if course is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -37,45 +77,56 @@ async def get_course(code: str, request: Request, authorization: Annotated[str |
             'self': {
                 'href': f'{str(request.url.path)}{f'?{str(request.url.query)}' if request.url.query else ''}'
             },
-            'sections': {
-                'href': f'{str(request.url.path)}/{{section}}',
-                'type': 'GET'
-            }
         }
+
+        if claims['role'] != Role.SERVICE:
+            url = await academia.lecture_info_page(code)
+            if url is not None:
+                links['info'] = {
+                    'href': url,
+                    'type': 'GET'
+                }
+
+        links['sections'] = {
+            'href': f'{str(request.url.path)}/{{section}}',
+            'type': 'GET'
+        }
+
 
         content_size = 0
         for x in course['disciplină']:
             if x != 'evaluare':
                 content_size += len(course['disciplină'][x])
 
-        if content_size > 0:
-            links['content'] = {
-                'href': f'{str(request.url.path)}/{{section}}/{{content}}',
-                'type': 'GET'
-            }
-
-        if (
-                (claims['role'] == Role.PROFESSOR and await academia.is_professor_holder(claims, code)) or
-                claims['role'] == Role.ADMIN
-        ):
-            links['delete'] = {
-                'href': f'{str(request.url.path)}',
-                'type': 'DELETE'
-            }
-            links['modify_evaluation']= {
-                'href': f'{str(request.url.path)}/evaluare',
-                'type': 'POST'
-            }
-            links['add_content'] = {
-                'href': f'{str(request.url.path)}/{{section}}/{{content}}',
-                'type': 'PUT'
-            }
-
+        if claims['role'] != Role.SERVICE:
             if content_size > 0:
-                links['delete_content'] =  {
+                links['content'] = {
                     'href': f'{str(request.url.path)}/{{section}}/{{content}}',
+                    'type': 'GET'
+                }
+
+            if (
+                    (claims['role'] == Role.PROFESSOR and await academia.is_professor_holder(claims, code)) or
+                    claims['role'] == Role.ADMIN
+            ):
+                links['delete'] = {
+                    'href': f'{str(request.url.path)}',
                     'type': 'DELETE'
                 }
+                links['modify_evaluation']= {
+                    'href': f'{str(request.url.path)}/evaluare',
+                    'type': 'POST'
+                }
+                links['add_content'] = {
+                    'href': f'{str(request.url.path)}/{{section}}/{{content}}',
+                    'type': 'PUT'
+                }
+
+                if content_size > 0:
+                    links['delete_content'] =  {
+                        'href': f'{str(request.url.path)}/{{section}}/{{content}}',
+                        'type': 'DELETE'
+                    }
 
         course['disciplină']['_links'] = links
         return JSONResponse({'lecture': course['disciplină']})
@@ -119,10 +170,10 @@ async def add_course_page(
                 'curs': {},
                 'laborator':{}
             },
-            'files': {}
+            'fișiere': {}
         })
 
-        course = courses.find_one({'cod': code}, {'files': 0})
+        course = courses.find_one({'cod': code}, {'fișiere': 0})
 
         links = {
             'self': {
@@ -170,13 +221,13 @@ async def delete_course_page(code: str, authorization: Annotated[str | None, Hea
 async def get_section(
         code: str, section: str, request: Request, authorization: Annotated[str | None, Header()] = None
 ):
-    claims = check_authorization(authorization, [Role.ADMIN, Role.PROFESSOR, Role.STUDENT])
+    claims = check_authorization(authorization, [Role.ADMIN, Role.SERVICE, Role.PROFESSOR, Role.STUDENT])
 
     try:
         if claims['role'] == Role.STUDENT and not await academia.is_student_enrolled(claims, code):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-        course = courses.find_one({'cod': code}, {'files': 0})
+        course = courses.find_one({'cod': code}, {'fișiere': 0})
         if course is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -189,33 +240,34 @@ async def get_section(
             }
         }
 
-        if section != 'evaluare':
-            if len(course['disciplină'][section]) > 0:
-                links['content'] = {
-                    'href': f'{str(request.url.path)}/{{section}}/{{content}}',
-                    'type': 'GET'
-                }
-
-        if (
-                (claims['role'] == Role.PROFESSOR and await academia.is_professor_holder(claims, code)) or
-                claims['role'] == Role.ADMIN
-        ):
+        if claims['role'] != Role.SERVICE:
             if section != 'evaluare':
-                links['add_content'] = {
-                    'href': f'{str(request.url.path)}/{{section}}/{{content}}',
-                    'type': 'PUT'
-                }
-
                 if len(course['disciplină'][section]) > 0:
-                    links['delete_content'] = {
+                    links['content'] = {
                         'href': f'{str(request.url.path)}/{{section}}/{{content}}',
-                        'type': 'DELETE'
+                        'type': 'GET'
                     }
-            else:
-                links['modify'] = {
-                    'href': f'{str(request.url.path)}',
-                    'type': 'POST'
-                }
+
+            if (
+                    (claims['role'] == Role.PROFESSOR and await academia.is_professor_holder(claims, code)) or
+                    claims['role'] == Role.ADMIN
+            ):
+                if section != 'evaluare':
+                    links['add_content'] = {
+                        'href': f'{str(request.url.path)}/{{section}}/{{content}}',
+                        'type': 'PUT'
+                    }
+
+                    if len(course['disciplină'][section]) > 0:
+                        links['delete_content'] = {
+                            'href': f'{str(request.url.path)}/{{section}}/{{content}}',
+                            'type': 'DELETE'
+                        }
+                else:
+                    links['modify'] = {
+                        'href': f'{str(request.url.path)}',
+                        'type': 'POST'
+                    }
 
         return JSONResponse({"lecture_section": {
             section: course['disciplină'][section],
@@ -235,7 +287,7 @@ async def add_evaluation(code: str, data: dict, authorization: Annotated[str | N
     except ServiceException:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    course = courses.find_one({'cod': code}, {'files': 0})
+    course = courses.find_one({'cod': code}, {'fișiere': 0})
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -247,12 +299,19 @@ async def add_evaluation(code: str, data: dict, authorization: Annotated[str | N
         if percentage > 100:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
-        courses.update_one({'cod': code}, {'$set': {f'disciplină.evaluare.parcurs': {}}})
+        courses.update_one({'cod': code}, {'$set': {
+            f'disciplină.evaluare.parcurs': {},
+            f'disciplină.evaluare.finală': {}
+        }})
+
+        examination = await academia.get_lecture_examination(code)
+        if examination is None:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
         for x in data:
             if x == 'finală':
                 courses.update_one({'cod': code}, {'$set': {
-                    f'disciplină.evaluare.finală.{list(course['disciplină']['evaluare']['finală'].keys())[0]}': data[x]
+                    f'disciplină.evaluare.finală.{course['disciplină']['evaluare']['finală'][examination]}': data[x]
                 }})
             else:
                 courses.update_one({'cod': code}, {'$set': {f'disciplină.evaluare.parcurs.{x}': data[x]}})
@@ -271,7 +330,7 @@ async def get_content(code: str, section: str, content: str, authorization: Anno
     except ServiceException:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    course = courses.find_one({'cod': code}, {f'files.{content}': 1, f'disciplină.{section}.{content}': 1})
+    course = courses.find_one({'cod': code}, {f'fișiere.{content}': 1, f'disciplină.{section}.{content}': 1})
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -281,7 +340,7 @@ async def get_content(code: str, section: str, content: str, authorization: Anno
     if content not in course['disciplină'][section]:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    return Response(content=course['files'][content], media_type=course['disciplină'][section][content]['type'])
+    return Response(content=course['fișiere'][content], media_type=course['disciplină'][section][content]['type'])
 
 
 @app.put('/{code}/{section}/{content}', status_code=status.HTTP_204_NO_CONTENT)
@@ -297,7 +356,7 @@ async def set_content(
     except ServiceException:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    course = courses.find_one({'cod': code}, {'files': 0})
+    course = courses.find_one({'cod': code}, {'fișiere': 0})
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -319,7 +378,7 @@ async def set_content(
             'type': request.headers.get('content-type'),
             'size': request.headers.get('content-length')
         },
-        f'files.{content}': data
+        f'fișiere.{content}': data
     }})
 
 
@@ -333,7 +392,7 @@ async def delete_content(code: str, section: str, content: str, authorization: A
     except ServiceException:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    course = courses.find_one({'cod': code}, {'files': 0})
+    course = courses.find_one({'cod': code}, {'fișiere': 0})
     if course is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -351,7 +410,7 @@ async def delete_content(code: str, section: str, content: str, authorization: A
 
     courses.update_one({'cod': code}, {'$unset': {
         f'disciplină.{section}.{content}': "",
-        f'files.{content}': ""
+        f'fișiere.{content}': ""
     }})
 
 
