@@ -17,3 +17,4 @@ CREATE TABLE `Invalid` (
 
 INSERT INTO `IDM` (`email`, `password`, `role`) VALUES ('admin', '21232f297a57a5a743894a0e4a801fc3', 'admin');
 INSERT INTO `IDM` (`email`, `password`, `role`) VALUES ('courses', '5f4dcc3b5aa765d61d8327deb882cf99', 'service');
+INSERT INTO `IDM` (`email`, `password`, `role`) VALUES ('academia', '5f4dcc3b5aa765d61d8327deb882cf99', 'service');

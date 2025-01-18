@@ -43,17 +43,19 @@ public class LectureController {
     private final LectureMapper lectureMapper;
     private final EnrollService enrollService;
     private final AuthorizationService authorizationService;
+    private final CoursesService coursesService;
 
     @Autowired
     public LectureController(
             LectureService lectureService, LectureMapper lectureMapper,
             EnrollService enrollService, AuthorizationService authorizationService,
-            StudentMapper studentMapper) {
+            StudentMapper studentMapper, CoursesService coursesService) {
         this.lectureService = lectureService;
         this.lectureMapper = lectureMapper;
         this.enrollService = enrollService;
         this.authorizationService = authorizationService;
         this.studentMapper = studentMapper;
+        this.coursesService = coursesService;
     }
 
     @GetMapping
@@ -223,6 +225,18 @@ public class LectureController {
 
         Map<String, Object> links = new LinkedHashMap<>();
         links.put("self", createLink(URL, null, null));
+
+        if (claims.role() != Role.SERVICE) {
+            String lecturePage = coursesService.getLecturePage(lecture);
+            if (lecturePage != null) {
+                links.put("lecture_page", createLink(lecturePage, "GET", null));
+            } else if (claims.role() != Role.STUDENT) {
+                links.put("create_lecture_page", createLink(
+                        coursesService.getLecturePageCreate(lecture), "POST", null
+                ));
+            }
+        }
+
         links.put("professor", createLink(
                 context + ProfessorController.path + "/" + dto.idHolder,
                 "GET", null
