@@ -190,9 +190,18 @@ public class ProfessorController {
             HttpServletRequest request
     ) {
         Claims claims = CheckAuthorization(authorization, List.of(Role.ADMIN));
-        Professor professor = professorService.setProfessor(
-                professorMapper.toEntity(professorDTO)
-        );
+
+        /* Create Professor */
+
+        Professor professor;
+
+        try {
+            professor = professorService.setProfessor(
+                    professorMapper.toEntity(professorDTO)
+            );
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
 
         if (professor == null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT);

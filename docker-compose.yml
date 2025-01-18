@@ -16,6 +16,33 @@ services:
       - idmdb:/var/lib/mysql
       - ./idmdb.sql:/docker-entrypoint-initdb.d/idmdb.sql
 
+  academiadb:
+    container_name: academiadb
+    image: mariadb:latest
+    networks:
+      - app-network
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=password
+      - MARIADB_DATABASE=academia
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=pass
+    volumes:
+      - academiadb:/var/lib/mysql
+      - ./academiadb.sql:/docker-entrypoint-initdb.d/academiadb.sql
+
+  coursesdb:
+    container_name: coursesdb
+    image: mongo:latest
+    networks:
+      - app-network
+    ports:
+      - "27017:27017"
+    volumes:
+      - coursesdb:/data/db
+      - coursesconfigdb:/data/configdb
+
   idm:
     container_name: idm
     build:
@@ -27,7 +54,34 @@ services:
     depends_on:
       - idmdb
     restart: always
-  
+
+  academia:
+    container_name: academia
+    build:
+      context: academia
+    networks:
+      - app-network
+    ports:
+      - "8080:8080"
+      - "5005:5005"
+    depends_on:
+      - academiadb
+      - idm
+    restart: always
+
+  courses:
+    container_name: courses
+    build:
+      context: courses
+    networks:
+      - app-network
+    ports:
+      - "8000:8000"
+    depends_on:
+      - coursesdb
+      - idm
+    restart: always
+
   
 networks:
   app-network:
@@ -36,3 +90,9 @@ networks:
 volumes:
   idmdb:
     name: idmdb
+  academiadb:
+    name: academiadb
+  coursesdb:
+    name: coursesdb
+  coursesconfigdb:
+    name: coursesconfigdb

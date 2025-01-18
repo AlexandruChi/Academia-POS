@@ -21,7 +21,7 @@ IDM_KEY = 'vYvAwpVXsEwtxyUbzWoqiTxPGUzZ4Qqn'
 
 PORT = 50000
 
-ROLES = ('admin', 'professor', 'student')
+ROLES = ('admin', 'service', 'professor', 'student')
 
 class InvalidTokenError(RuntimeError):
     pass

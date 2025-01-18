@@ -2,7 +2,9 @@ package pos.alexandruchi.academia.service;
 
 import com.auth0.jwt.JWT;
 import com.google.protobuf.Empty;
+import pos.alexandruchi.academia.exception.service.ServiceException;
 import io.grpc.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import pos.alexandruchi.academia.IDM.*;
@@ -15,10 +17,10 @@ public class IDMService {
     private final ManagedChannel channel;
     private final IDMGrpc.IDMBlockingStub stub;
 
-    public IDMService() {
+    public IDMService(@Value("${idm.host}") String host, @Value("${idm.port}") int port) {
         try {
             channel = ManagedChannelBuilder
-                    .forAddress("::", 50000)
+                    .forAddress(host, port)
                     .usePlaintext()
                     .build();
         } catch (Exception e) {
@@ -52,7 +54,13 @@ public class IDMService {
             //noinspection ResultOfMethodCallIgnored
             stub.withCallCredentials(callCredentials).validate(Empty.newBuilder().build());
         } catch (Exception e) {
-            return false;
+            if (e instanceof StatusRuntimeException) {
+                if (((StatusRuntimeException) e).getStatus().getCode() == Status.Code.UNAUTHENTICATED) {
+                    return false;
+                }
+            }
+
+            throw new ServiceException();
         }
 
         return true;

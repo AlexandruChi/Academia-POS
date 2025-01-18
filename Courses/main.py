@@ -3,6 +3,9 @@ from typing import Annotated
 
 from pymongo.errors import DuplicateKeyError
 
+import os
+import signal
+
 import config
 from academia import Academia
 from authorization import Authorization, Role
@@ -12,17 +15,26 @@ from fastapi import FastAPI, HTTPException, status, Header, Body, Request
 from fastapi.responses import JSONResponse, Response
 import pymongo
 
-client = pymongo.MongoClient(f'mongodb://{config.DATABASE_HOST}')
-db = client['discipline']
-courses = db['disciplină']
+while True:
+    try :
+        client = pymongo.MongoClient(f'mongodb://{config.DATABASE_HOST}')
+        db = client['discipline']
+        courses = db['disciplină']
+        courses.create_index([('cod', pymongo.ASCENDING)], unique=True, name='index_cod')
+
+        academia = Academia()
+        break
+
+    except Exception as e:
+        print(e)
+
 
 app = FastAPI(root_path='/api/courses')
 
-academia = Academia()
 
 @app.get('')
 async def get_courses(request: Request, authorization: Annotated[str | None, Header()] = None):
-    check_authorization(authorization, [Role.ADMIN, Role.PROFESSOR])
+    check_authorization(authorization, [Role.ADMIN])
 
     query = courses.find({}, {'cod': 1})
     course_list = []
@@ -73,19 +85,23 @@ async def get_course(code: str, request: Request, authorization: Annotated[str |
         if course is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+        url = None
+        if claims['role'] != Role.SERVICE:
+            url = await academia.lecture_info_page(code)
+            if url is None and claims['role'] == Role.PROFESSOR:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
         links = {
             'self': {
                 'href': f'{str(request.url.path)}{f'?{str(request.url.query)}' if request.url.query else ''}'
             },
         }
 
-        if claims['role'] != Role.SERVICE:
-            url = await academia.lecture_info_page(code)
-            if url is not None:
-                links['info'] = {
-                    'href': url,
-                    'type': 'GET'
-                }
+        if url is not None:
+            links['info'] = {
+                'href': url,
+                'type': 'GET'
+            }
 
         links['sections'] = {
             'href': f'{str(request.url.path)}/{{section}}',
@@ -154,6 +170,8 @@ async def add_course_page(
     if examination is None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
+    url = await academia.lecture_info_page(code)
+
     try :
         courses.insert_one({
             'cod': code,
@@ -178,23 +196,30 @@ async def add_course_page(
         links = {
             'self': {
                 'href': f'{str(request.url.path)}/{code}'
-            },
-            'sections': {
-                'href': f'{str(request.url.path)}/{{section}}',
-                'type': 'GET'
-            },
-            'delete': {
-                'href': f'{str(request.url.path)}',
-                'type': 'DELETE'
-            },
-            'modify_evaluation': {
-                'href': f'{str(request.url.path)}/evaluare',
-                'type': 'POST'
-            },
-            'add_content': {
-                'href': f'{str(request.url.path)}/{{section}}/{{content}}',
-                'type': 'PUT'
             }
+        }
+
+        if url is not None:
+            links['info'] = {
+                'href': url,
+                'type': 'GET'
+            }
+
+        links['sections'] = {
+            'href': f'{str(request.url.path)}/{{section}}',
+            'type': 'GET'
+        }
+        links['delete'] = {
+            'href': f'{str(request.url.path)}',
+            'type': 'DELETE'
+        },
+        links['modify_evaluation'] = {
+            'href': f'{str(request.url.path)}/evaluare',
+            'type': 'POST'
+        },
+        links['add_content'] = {
+            'href': f'{str(request.url.path)}/{{section}}/{{content}}',
+            'type': 'PUT'
         }
 
         course['disciplină']['_links'] = links

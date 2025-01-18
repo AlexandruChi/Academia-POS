@@ -20,6 +20,9 @@ public class CoursesService {
     @Value("${courses.host}")
     private String coursesHost;
 
+    @Value("${courses.port}")
+    private String coursesPort;
+
     @Value("${courses.path}")
     private String coursesPath;
 
@@ -38,12 +41,12 @@ public class CoursesService {
     private void updateToken() {
         authorization = idmService.Authenticate(username, password);
         if (authorization == null) {
-            throw new RuntimeException("Failed to authenticate with IDM service");
+            throw new ServiceException();
         }
     }
 
     public String getLecturePageCreate(Lecture lecture) {
-        return coursesHost + coursesPath + "?code=" + lecture.getId();
+        return coursesHost + ":" + coursesPort + coursesPath + "?code=" + lecture.getId();
     }
 
     public String getLecturePage(Lecture lecture) {
@@ -56,7 +59,7 @@ public class CoursesService {
             headers.set("Authorization", "Bearer " + authorization);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
-            String lecturePage = coursesHost + coursesPath + "/" + lecture.getId();
+            String lecturePage = coursesHost + ":" + coursesPort + coursesPath + "/" + lecture.getId();
 
             try {
                 @SuppressWarnings("HttpUrlsUsage") ResponseEntity<String> response = restTemplate.exchange(

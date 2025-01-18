@@ -14,7 +14,10 @@ class Academia:
         self.token = Authorization.get_authorization(config.USERNAME, config.PASSWORD)
 
     def __del__(self):
-        Authorization.remove_authorization(self.token)
+        try:
+            Authorization.remove_authorization(self.token)
+        except AttributeError:
+            pass
 
     async def is_student_enrolled(self, claims: dict, lecture: str) -> bool | None:
         if claims['role'] != Role.STUDENT:
