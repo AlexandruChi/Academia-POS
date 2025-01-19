@@ -3,9 +3,6 @@ from typing import Annotated
 
 from pymongo.errors import DuplicateKeyError
 
-import os
-import signal
-
 import config
 from academia import Academia
 from authorization import Authorization, Role

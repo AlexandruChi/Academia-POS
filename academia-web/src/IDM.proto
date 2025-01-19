@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_package = "pos.alexandruchi.academia.IDM";
+
+import "google/protobuf/empty.proto";
+
+package IDM;
+
+service IDM {
+  rpc Authenticate (login) returns (token) {}
+  rpc Deauthenticate (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Register (register) returns (google.protobuf.Empty) {}
+  rpc Validate (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message login {
+  string username = 1;
+  string password = 2;
+}
+
+message register {
+  string username = 1;
+  string password = 2;
+  string role = 3;
+}
+
+message token {
+  string token = 1;
+}

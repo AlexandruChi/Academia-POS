@@ -81,6 +81,19 @@ services:
       - coursesdb
       - idm
     restart: always
+    
+  envoy:
+    container_name: envoy
+    image: envoyproxy/envoy:v1.20.0
+    networks:
+      - app-network
+    ports:
+      - "8050:8080"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    depends_on:
+      - idm
+    restart: always
 
   
 networks:

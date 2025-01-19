@@ -1,0 +1,17 @@
+.top-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background: mediumaquamarine;
+    width: 100%;
+}
+
+.top-bar > * {
+    margin: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.top-bar > nav > a:hover {
+    color: white;
+}
