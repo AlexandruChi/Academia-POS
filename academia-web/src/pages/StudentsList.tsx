@@ -63,25 +63,6 @@ const StudentsList: React.FC = () => {
             }
         }
 
-        const selectStudent = async (url: string, method: string) => {
-            try {
-                if (url[0] == '/') {
-                    url = ADADEMIA_HOST + url;
-                }
-
-                await fetchJsonWithAuth(
-                    url, method, undefined, 200
-                );
-
-            } catch (error) {
-                if (error instanceof Error) {
-                    alert(error.message);
-                } else {
-                    alert('Unknown error');
-                }
-            }
-        }
-
         const fetchStudents = async () => {
             try {
                 const data = await fetchJsonWithAuth(
@@ -98,18 +79,16 @@ const StudentsList: React.FC = () => {
 
                 if (data.students._links["student"]) {
                     buttons.push({
-                        name: "select", onClick: (id: number) => {
-                            const url = data.students._links["student"].href.replace("{id}", id.toString());
-                            selectStudent(url, data.students._links["student"].type).then()
+                        name: "select", onClick: () => {
+
                         }
                     });
                 }
 
                 if (data.students._links["lectures"]) {
                     buttons.push({
-                        name: "lectures", onClick: (id: number) => {
-                            const url = data.students._links["lectures"].href.replace("{id}", id.toString());
-                            selectStudent(url, data.students._links["lectures"].type).then()
+                        name: "lectures", onClick: () => {
+
                         }
                     });
                 }
