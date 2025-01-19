@@ -41,46 +41,47 @@ function isResponse(data: any): data is Response {
 const StudentsList: React.FC = () => {
     const [students, setStudents] = useState<StudentItem[]>([]);
     const [studentOptions, setStudentOptions] = useState<Button[]>([]);
-
-    const deleteStudent = async (url: string, method: string) => {
-        try {
-            if (url[0] == '/') {
-                url = ADADEMIA_HOST + url;
-            }
-
-            await fetchJsonWithAuth(
-                url, method, undefined, 204
-            );
-
-        } catch (error) {
-            if (error instanceof Error) {
-                alert(error.message);
-            } else {
-                alert('Unknown error');
-            }
-        }
-    }
-
-    const selectStudent = async (url: string, method: string) => {
-        try {
-            if (url[0] == '/') {
-                url = ADADEMIA_HOST + url;
-            }
-
-            await fetchJsonWithAuth(
-                url, method, undefined, 200
-            );
-
-        } catch (error) {
-            if (error instanceof Error) {
-                alert(error.message);
-            } else {
-                alert('Unknown error');
-            }
-        }
-    }
+    const [update, setUpdate] = useState(false);
 
     useEffect(() => {
+        const deleteStudent = async (url: string, method: string) => {
+            try {
+                if (url[0] == '/') {
+                    url = ADADEMIA_HOST + url;
+                }
+
+                await fetchJsonWithAuth(
+                    url, method, undefined, 204
+                );
+
+            } catch (error) {
+                if (error instanceof Error) {
+                    alert(error.message);
+                } else {
+                    alert('Unknown error');
+                }
+            }
+        }
+
+        const selectStudent = async (url: string, method: string) => {
+            try {
+                if (url[0] == '/') {
+                    url = ADADEMIA_HOST + url;
+                }
+
+                await fetchJsonWithAuth(
+                    url, method, undefined, 200
+                );
+
+            } catch (error) {
+                if (error instanceof Error) {
+                    alert(error.message);
+                } else {
+                    alert('Unknown error');
+                }
+            }
+        }
+
         const fetchStudents = async () => {
             try {
                 const data = await fetchJsonWithAuth(
@@ -117,7 +118,9 @@ const StudentsList: React.FC = () => {
                     buttons.push({
                         name: "delete", onClick: (id: number) => {
                             const url = data.students._links["delete"].href.replace("{id}", id.toString());
-                            deleteStudent(url, data.students._links["delete"].type).then()
+                            deleteStudent(url, data.students._links["delete"].type).then(
+                                () => setUpdate(!update)
+                            )
                         }
                     });
                 }
@@ -134,7 +137,7 @@ const StudentsList: React.FC = () => {
         };
 
         fetchStudents().then(r => console.log(r));
-    }, []);
+    }, [update]);
 
     return (
         <div className="page">

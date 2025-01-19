@@ -41,46 +41,47 @@ function isResponse(data: any): data is Response {
 const ProfessorsList: React.FC = () => {
     const [professors, setProfessors] = useState<ProfessorItem[]>([]);
     const [professorOptions, setProfessorOptions] = useState<Button[]>([]);
-
-    const deleteProfessor = async (url: string, method: string) => {
-        try {
-            if (url[0] == '/') {
-                url = ADADEMIA_HOST + url;
-            }
-
-            await fetchJsonWithAuth(
-                url, method, undefined, 204
-            );
-
-        } catch (error) {
-            if (error instanceof Error) {
-                alert(error.message);
-            } else {
-                alert('Unknown error');
-            }
-        }
-    }
-
-    const selectProfessor = async (url: string, method: string) => {
-        try {
-            if (url[0] == '/') {
-                url = ADADEMIA_HOST + url;
-            }
-
-            await fetchJsonWithAuth(
-                url, method, undefined, 200
-            );
-
-        } catch (error) {
-            if (error instanceof Error) {
-                alert(error.message);
-            } else {
-                alert('Unknown error');
-            }
-        }
-    }
+    const [update, setUpdate] = useState(false);
 
     useEffect(() => {
+        const deleteProfessor = async (url: string, method: string) => {
+            try {
+                if (url[0] == '/') {
+                    url = ADADEMIA_HOST + url;
+                }
+
+                await fetchJsonWithAuth(
+                    url, method, undefined, 204
+                );
+
+            } catch (error) {
+                if (error instanceof Error) {
+                    alert(error.message);
+                } else {
+                    alert('Unknown error');
+                }
+            }
+        }
+
+        const selectProfessor = async (url: string, method: string) => {
+            try {
+                if (url[0] == '/') {
+                    url = ADADEMIA_HOST + url;
+                }
+
+                await fetchJsonWithAuth(
+                    url, method, undefined, 200
+                );
+
+            } catch (error) {
+                if (error instanceof Error) {
+                    alert(error.message);
+                } else {
+                    alert('Unknown error');
+                }
+            }
+        }
+
         const fetchProfessors = async () => {
             try {
                 const data = await fetchJsonWithAuth(
@@ -117,7 +118,9 @@ const ProfessorsList: React.FC = () => {
                     buttons.push({
                         name: "delete", onClick: (id: number) => {
                             const url = data.professors._links["delete"].href.replace("{id}", id.toString());
-                            deleteProfessor(url, data.professors._links["delete"].type).then()
+                            deleteProfessor(url, data.professors._links["delete"].type).then(
+                                () => setUpdate(!update)
+                            )
                         }
                     });
                 }
@@ -133,8 +136,8 @@ const ProfessorsList: React.FC = () => {
             }
         };
 
-        fetchProfessors().then(r => console.log(r));
-    }, []);
+        fetchProfessors().then();
+    }, [update]);
 
     return (
         <div className="page">

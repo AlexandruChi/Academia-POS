@@ -186,7 +186,7 @@ async def add_course_page(
                     'finală': {
                         examination: {
                             "pondere": 100,
-                            "detalii": {}
+                            "detalii": ""
                         }
                     },
                     'parcurs': {}
@@ -330,19 +330,19 @@ async def add_evaluation(code: str, data: dict, authorization: Annotated[str | N
         if percentage > 100:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
-        courses.update_one({'cod': code}, {'$set': {
-            f'disciplină.evaluare.parcurs': {},
-            f'disciplină.evaluare.finală': {}
-        }})
-
         examination = await academia.get_lecture_examination(code)
         if examination is None:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
+        courses.update_one({'cod': code}, {'$set': {
+            f'disciplină.evaluare.finală': {examination: {}},
+            f'disciplină.evaluare.parcurs': {}
+        }})
+
         for x in data:
             if x == 'finală':
                 courses.update_one({'cod': code}, {'$set': {
-                    f'disciplină.evaluare.finală.{course['disciplină']['evaluare']['finală'][examination]}': data[x]
+                    f'disciplină.evaluare.finală.{examination}': data[x]
                 }})
             else:
                 courses.update_one({'cod': code}, {'$set': {f'disciplină.evaluare.parcurs.{x}': data[x]}})

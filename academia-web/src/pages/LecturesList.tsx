@@ -38,6 +38,7 @@ class Response {
 const LecturesList: React.FC<PageProperties> = ({onChange}) => {
     const [lectures, setLectures] = useState<LectureItem[]>([]);
     const [lectureOptions, setLectureOptions] = useState<Button[]>([]);
+    const [update, setUpdate] = useState(false);
 
     useEffect(() => {
         const deleteLecture = async (url: string, method: string) => {
@@ -113,7 +114,7 @@ const LecturesList: React.FC<PageProperties> = ({onChange}) => {
                             if (window.confirm(`Delete lecture ${code}?`)) {
                                 const url = data.lectures._links["delete"].href.replace("{code}", code);
                                 deleteLecture(url, data.lectures._links["delete"].type).then(
-                                    () => fetchCourses().then()
+                                    () => setUpdate(!update)
                                 )
                             }
                         }
@@ -132,7 +133,7 @@ const LecturesList: React.FC<PageProperties> = ({onChange}) => {
         };
 
         fetchCourses().then();
-    }, [onChange]);
+    }, [onChange, update]);
 
     return (
         <div className="page">

@@ -53,13 +53,13 @@ class CoursesItem {
 }
 
 class CoursesInfo {
-    evaluare: Record<string, object>
+    evaluare: Record<string, Record<string, Record<string, string>>>
     curs: Record<string, CoursesItem>;
     laborator: Record<string, CoursesItem>;
     _links: Record<string, Link>;
 
     constructor(
-        evaluare: Record<string, object>,
+        evaluare: Record<string, Record<string, Record<string, string>>>,
         curs: Record<string, CoursesItem>,
         laborator: Record<string, CoursesItem>,
         _links: Record<string, Link>
@@ -320,16 +320,43 @@ const LecturePage: React.FC<LecturePageProperties> = ({onChange, code, url, meth
         <div className="page">
             <h1>Lecture</h1>
             {lecture && <LectureCard key={code} code={code} lecture={lecture} buttons={lectureOptions} />}
-            <h2>Examinare</h2>
             {course && (
                 <>
+                    <h2>Evaluare</h2>
+                    {Object.keys(course.evaluare).length > 0 && (
+                        <ul>
+                            {Object.entries(course.evaluare).map(([key, value], index) => (
+                                <li key={index}>
+                                    <strong>{key}</strong>:
+                                    {Object.keys(value).length > 0 && (
+                                        <ul>
+                                            {Object.entries(value).map(([subKey, subValue], subIndex) => (
+                                                <li key={subIndex}>
+                                                    <strong>{subKey}</strong>:
+                                                    {Object.keys(subValue).length > 0 && (
+                                                        <ul>
+                                                            {Object.entries(subValue).map(([innerKey, innerValue], innerIndex) => (
+                                                                <li key={innerIndex}>
+                                                                    <strong>{innerKey}</strong>: {typeof innerValue === 'object' ? JSON.stringify(innerValue) : innerValue}
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                     <h2>Curs</h2>
                     <ul>
                         {Object.entries(course.curs).map(([name, item], index) => (
                             <li key={index}>
                                 {item.file} - {item.type} - {item.size}
-                                <button onClick={() => handleDownload(item.file, name, "curs")}>Download</button>
-                                <button onClick={() => handleDelete(name, "curs")}>Delete</button>
+                                {itemDownload && <button onClick={() => handleDownload(item.file, name, "curs")}>Download</button>}
+                                {itemDelete && <button onClick={() => handleDelete(name, "curs")}>Delete</button>}
                             </li>
                         ))}
                     </ul>
@@ -338,8 +365,8 @@ const LecturePage: React.FC<LecturePageProperties> = ({onChange, code, url, meth
                         {Object.entries(course.laborator).map(([name, item], index) => (
                             <li key={index}>
                                 {item.file} - {item.type} - {item.size}
-                                <button onClick={() => handleDownload(item.file, name, "laborator")}>Download</button>
-                                <button onClick={() => handleDelete(name, "laborator")}>Delete</button>
+                                {itemDownload && <button onClick={() => handleDownload(item.file, name, "laborator")}>Download</button>}
+                                {itemDelete && <button onClick={() => handleDelete(name, "laborator")}>Delete</button>}
                             </li>
                         ))}
                     </ul>
