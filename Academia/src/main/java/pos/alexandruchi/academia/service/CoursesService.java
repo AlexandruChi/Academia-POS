@@ -46,7 +46,7 @@ public class CoursesService {
     }
 
     public String getLecturePageCreate(Lecture lecture) {
-        return coursesHost + ":" + coursesPort + coursesPath + "?code=" + lecture.getId();
+        return "localhost:" + coursesPort + coursesPath + "?code=" + lecture.getId();
     }
 
     public String getLecturePage(Lecture lecture) {
@@ -73,7 +73,7 @@ public class CoursesService {
                     break;
                 }
 
-                return lecturePage;
+                return lecturePage.replace(coursesHost + ":", "localhost:");
 
             } catch (HttpClientErrorException ex) {
                 if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {

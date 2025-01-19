@@ -156,7 +156,7 @@ class Academia:
                 if response.status_code != status.HTTP_200_OK:
                     break
 
-                return url
+                return url.replace(config.ACADEMIA_HOST, config.ACADEMIA_HOST.replace('academia', 'localhost'))
 
         except httpx.ConnectError:
             pass

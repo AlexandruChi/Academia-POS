@@ -9,6 +9,7 @@ from authorization import Authorization, Role
 from exceptions import *
 
 from fastapi import FastAPI, HTTPException, status, Header, Body, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 import pymongo
 
@@ -28,6 +29,14 @@ while True:
 
 app = FastAPI(root_path='/api/courses')
 
+# noinspection PyTypeChecker
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get('')
 async def get_courses(request: Request, authorization: Annotated[str | None, Header()] = None):
@@ -148,7 +157,7 @@ async def get_course(code: str, request: Request, authorization: Annotated[str |
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
-@app.post('', status_code=status.HTTP_201_CREATED)
+@app.post('')
 async def add_course_page(
         request: Request, code: str | None = None, authorization: Annotated[str | None, Header()] = None
 ):
@@ -220,7 +229,7 @@ async def add_course_page(
         }
 
         course['disciplină']['_links'] = links
-        return JSONResponse({'lecture': course['disciplină']})
+        return JSONResponse({'lecture': course['disciplină']}, status.HTTP_201_CREATED)
 
     except DuplicateKeyError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT)
