@@ -6,17 +6,19 @@ export interface Button {
     onClick: (id: number) => void;
 }
 
+export interface Professor {
+    lastName: string;
+    firstName: string;
+    email: string;
+    teachingDegree: string;
+    associationType: string;
+    affiliation: string | null;
+}
+
 interface ProfessorCardProperties {
     buttons: Button[];
     id: number;
-    professor: {
-        lastName: string;
-        firstName: string;
-        email: string;
-        teachingDegree: string;
-        associationType: string;
-        affiliation: string | null;
-    };
+    professor: Professor;
 }
 
 export const ProfessorCard: React.FC<ProfessorCardProperties> = ({ buttons, id, professor }) => {

@@ -6,17 +6,19 @@ export interface Button {
     onClick: (id: number) => void;
 }
 
+export interface Student {
+    lastName: string;
+    firstName: string;
+    email: string;
+    studyCycle: string;
+    studyYear: string;
+    group: string;
+}
+
 interface StudentCardProperties {
     buttons: Button[];
     id: number;
-    student: {
-        lastName: string;
-        firstName: string;
-        email: string;
-        studyCycle: string;
-        studyYear: string;
-        group: string;
-    };
+    student: Student;
 }
 
 export const StudentCard: React.FC<StudentCardProperties> = ({ buttons, id, student }) => {

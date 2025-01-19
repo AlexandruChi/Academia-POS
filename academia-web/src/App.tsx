@@ -2,17 +2,17 @@ import React, {useEffect, useState} from 'react';
 import Login from './Login';
 import TopBar from "./TopBar.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
-import Lectures from "./pages/Lectures.tsx";
-import Professors from "./pages/Professors.tsx";
-import Students from "./pages/Students.tsx";
+import LecturesList from "./pages/LecturesList.tsx";
+import ProfessorsList from "./pages/ProfessorsList.tsx";
+import StudentsList from "./pages/StudentsList.tsx";
 import {NavPage} from "./types.ts";
 
 const App: React.FC = () => {
     const componentsArray: NavPage[] = [
-        { name: 'Dashboard', component: Dashboard },
-        { name: 'Lectures', component: Lectures },
-        { name: 'Professors', component: Professors },
-        { name: 'Students', component: Students }
+        { name: 'Dashboard', component: Dashboard, params: {} },
+        { name: 'Lectures', component: LecturesList, params: {} },
+        { name: 'Professors', component: ProfessorsList, params: {} },
+        { name: 'Students', component: StudentsList, params: {} }
     ];
 
     const [connected, setConnected] = useState(false);
@@ -26,8 +26,12 @@ const App: React.FC = () => {
         setConnected(false);
     }
 
-    const handlePageChange = (page: NavPage) => {
-        setCurrentPage(page);
+    const handlePageChange = (page: NavPage | null) => {
+        if (page == null) {
+            setCurrentPage(componentsArray[0]);
+        } else {
+            setCurrentPage(page);
+        }
     }
 
     useEffect(() => {
@@ -40,7 +44,7 @@ const App: React.FC = () => {
     return (
         <div>
             {connected && <TopBar onLogOut={handleDisconnect} onChange={handlePageChange} pages={componentsArray} />}
-            {connected && currentPage && <currentPage.component />}
+            {connected && currentPage && <currentPage.component onChange={handlePageChange} {...currentPage.params} />}
             {!connected && <Login onLogin={handleConnect} />}
         </div>
     );

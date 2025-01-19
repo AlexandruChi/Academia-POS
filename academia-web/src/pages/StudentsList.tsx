@@ -1,34 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ADADEMIA_HOST, ACADEMIA_PATH } from "../config.ts";
 import { fetchJsonWithAuth } from '../service.ts';
-import { StudentCard, Button } from "../cards/StudentCard.tsx";
+import { StudentCard, Button, Student } from "../cards/StudentCard.tsx";
 import { Link } from "../types.ts";
 import './Page.css';
-
-class Student {
-    lastName: string;
-    firstName: string;
-    email: string;
-    studyCycle: string;
-    studyYear: string;
-    group: string;
-
-    constructor(
-        lastName: string,
-        firstName: string,
-        email: string,
-        studyCycle: string,
-        studyYear: string,
-        group: string
-    ) {
-        this.lastName = lastName;
-        this.firstName = firstName;
-        this.email = email;
-        this.studyCycle = studyCycle;
-        this.studyYear = studyYear;
-        this.group = group;
-    }
-}
 
 class StudentItem {
     id: number;
@@ -63,8 +38,8 @@ function isResponse(data: any): data is Response {
     return data && data.students && Array.isArray(data.students.list);
 }
 
-const Students: React.FC = () => {
-    const [response, setResponse] = useState<Response>();
+const StudentsList: React.FC = () => {
+    const [students, setStudents] = useState<StudentItem[]>([]);
     const [studentOptions, setStudentOptions] = useState<Button[]>([]);
 
     const deleteStudent = async (url: string, method: string) => {
@@ -86,6 +61,25 @@ const Students: React.FC = () => {
         }
     }
 
+    const selectStudent = async (url: string, method: string) => {
+        try {
+            if (url[0] == '/') {
+                url = ADADEMIA_HOST + url;
+            }
+
+            await fetchJsonWithAuth(
+                url, method, undefined, 200
+            );
+
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(error.message);
+            } else {
+                alert('Unknown error');
+            }
+        }
+    }
+
     useEffect(() => {
         const fetchStudents = async () => {
             try {
@@ -96,7 +90,40 @@ const Students: React.FC = () => {
                     // noinspection ExceptionCaughtLocallyJS
                     throw new Error('Service exception');
                 }
-                setResponse(data);
+
+                setStudents(data.students.list);
+
+                const buttons: Button[] = []
+
+                if (data.students._links["student"]) {
+                    buttons.push({
+                        name: "select", onClick: (id: number) => {
+                            const url = data.students._links["student"].href.replace("{id}", id.toString());
+                            selectStudent(url, data.students._links["student"].type).then()
+                        }
+                    });
+                }
+
+                if (data.students._links["lectures"]) {
+                    buttons.push({
+                        name: "lectures", onClick: (id: number) => {
+                            const url = data.students._links["lectures"].href.replace("{id}", id.toString());
+                            selectStudent(url, data.students._links["lectures"].type).then()
+                        }
+                    });
+                }
+
+                if (data.students._links["delete"]) {
+                    buttons.push({
+                        name: "delete", onClick: (id: number) => {
+                            const url = data.students._links["delete"].href.replace("{id}", id.toString());
+                            deleteStudent(url, data.students._links["delete"].type).then()
+                        }
+                    });
+                }
+
+                setStudentOptions(buttons);
+
             } catch (error) {
                 if (error instanceof Error) {
                     alert(error.message);
@@ -107,29 +134,13 @@ const Students: React.FC = () => {
         };
 
         fetchStudents().then(r => console.log(r));
-
-        if (response) {
-            const buttons: Button[] = []
-
-            if (response.students._links["delete"]) {
-                buttons.push({
-                    name: "Delete", onClick: (id: number) => {
-                        const url = response.students._links["delete"].href.replace("{id}", id.toString());
-                        deleteStudent(url, response.students._links["delete"].type).then()
-                    }
-                });
-            }
-
-            setStudentOptions(buttons);
-        }
-
-    }, [response]);
+    }, []);
 
     return (
         <div className="page">
             <h1>Students</h1>
             <ul>
-                {response && response.students.list.map((studentItem) => (
+                {students && students.map((studentItem) => (
                     <StudentCard
                         key={studentItem.id} id={studentItem.id} student={studentItem.student} buttons={studentOptions}
                     />
@@ -139,4 +150,4 @@ const Students: React.FC = () => {
     );
 }
 
-export default Students;
+export default StudentsList;

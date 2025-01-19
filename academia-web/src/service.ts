@@ -7,7 +7,8 @@ export const fetchJsonWithAuth = async (
     }
 
     try {
-        const response = await fetch(url, {
+        // noinspection HttpUrlsUsage
+        const response = await fetch(`http://${url}`, {
             method: method,
             headers: {
                 'Authorization': `Bearer ${token}`,

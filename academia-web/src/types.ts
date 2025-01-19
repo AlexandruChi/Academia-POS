@@ -1,8 +1,10 @@
 import React from "react";
+import {PageProperties} from "./pages/PageProperties.ts";
 
 export interface NavPage {
     name: string;
-    component: React.FC;
+    component: React.FC<PageProperties>;
+    params: object;
 }
 
 export class Link {

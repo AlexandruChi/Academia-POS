@@ -3,19 +3,22 @@ import './CardStyle.css';
 
 export interface Button {
     name: string;
-    onClick: (code: string) => void;
+    onClick: (code: string, lecture: Lecture) => void;
+}
+
+export interface Lecture {
+    idHolder: string;
+    lectureName: string;
+    studyYear: string;
+    lectureType: string;
+    lectureCategory: string;
+    examinationType: string;
 }
 
 interface LectureCardProperties {
     buttons: Button[];
     code: string;
-    lecture: {
-        lectureName: string;
-        studyYear: string;
-        lectureType: string;
-        lectureCategory: string;
-        examinationType: string;
-    };
+    lecture: Lecture;
 }
 
 export const LectureCard: React.FC<LectureCardProperties> = ({ buttons, code, lecture }) => {
@@ -30,7 +33,7 @@ export const LectureCard: React.FC<LectureCardProperties> = ({ buttons, code, le
             <h2 className="card-title">{`${lecture.lectureName} (${code})`}</h2>
             <div className="card-buttons">
                 {buttons.map((button, index) => (
-                    <button key={index} onClick={() => button.onClick(code)}>
+                    <button key={index} onClick={() => button.onClick(code, lecture)}>
                         {button.name}
                     </button>
                 ))}

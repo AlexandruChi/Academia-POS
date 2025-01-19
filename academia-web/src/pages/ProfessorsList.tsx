@@ -1,34 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ADADEMIA_HOST, ACADEMIA_PATH } from "../config.ts";
 import { fetchJsonWithAuth } from '../service.ts';
-import { ProfessorCard, Button } from "../cards/ProfessorCard.tsx";
+import { ProfessorCard, Button, Professor } from "../cards/ProfessorCard.tsx";
 import { Link} from "../types.ts";
 import './Page.css';
-
-class Professor {
-    lastName: string;
-    firstName: string;
-    email: string;
-    teachingDegree: string;
-    associationType: string;
-    affiliation: string | null;
-
-    constructor(
-        lastName: string,
-        firstName: string,
-        email: string,
-        teachingDegree: string,
-        associationType: string,
-        affiliation: string | null
-    ) {
-        this.lastName = lastName;
-        this.firstName = firstName;
-        this.email = email;
-        this.teachingDegree = teachingDegree;
-        this.associationType = associationType;
-        this.affiliation = affiliation;
-    }
-}
 
 class ProfessorItem {
     id: number;
@@ -63,8 +38,8 @@ function isResponse(data: any): data is Response {
     return data && data.professors && Array.isArray(data.professors.list);
 }
 
-const Professors: React.FC = () => {
-    const [response, setResponse] = useState<Response>();
+const ProfessorsList: React.FC = () => {
+    const [professors, setProfessors] = useState<ProfessorItem[]>([]);
     const [professorOptions, setProfessorOptions] = useState<Button[]>([]);
 
     const deleteProfessor = async (url: string, method: string) => {
@@ -86,6 +61,25 @@ const Professors: React.FC = () => {
         }
     }
 
+    const selectProfessor = async (url: string, method: string) => {
+        try {
+            if (url[0] == '/') {
+                url = ADADEMIA_HOST + url;
+            }
+
+            await fetchJsonWithAuth(
+                url, method, undefined, 200
+            );
+
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(error.message);
+            } else {
+                alert('Unknown error');
+            }
+        }
+    }
+
     useEffect(() => {
         const fetchProfessors = async () => {
             try {
@@ -96,7 +90,40 @@ const Professors: React.FC = () => {
                     // noinspection ExceptionCaughtLocallyJS
                     throw new Error('Service exception');
                 }
-                setResponse(data);
+
+                setProfessors(data.professors.list);
+
+                const buttons: Button[] = []
+
+                if (data.professors._links["professor"]) {
+                    buttons.push({
+                        name: "select", onClick: (id: number) => {
+                            const url = data.professors._links["professor"].href.replace("{id}", id.toString());
+                            selectProfessor(url, data.professors._links["professor"].type).then()
+                        }
+                    });
+                }
+
+                if (data.professors._links["lectures"]) {
+                    buttons.push({
+                        name: "lectures", onClick: (id: number) => {
+                            const url = data.professors._links["lectures"].href.replace("{id}", id.toString());
+                            selectProfessor(url, data.professors._links["lectures"].type).then()
+                        }
+                    });
+                }
+
+                if (data.professors._links["delete"]) {
+                    buttons.push({
+                        name: "delete", onClick: (id: number) => {
+                            const url = data.professors._links["delete"].href.replace("{id}", id.toString());
+                            deleteProfessor(url, data.professors._links["delete"].type).then()
+                        }
+                    });
+                }
+
+                setProfessorOptions(buttons);
+
             } catch (error) {
                 if (error instanceof Error) {
                     alert(error.message);
@@ -107,29 +134,13 @@ const Professors: React.FC = () => {
         };
 
         fetchProfessors().then(r => console.log(r));
-
-        if (response) {
-            const buttons: Button[] = []
-
-            if (response.professors._links["delete"]) {
-                buttons.push({
-                    name: "Delete", onClick: (id: number) => {
-                        const url = response.professors._links["delete"].href.replace("{id}", id.toString());
-                        deleteProfessor(url, response.professors._links["delete"].type).then()
-                    }
-                });
-            }
-
-            setProfessorOptions(buttons);
-        }
-
-    }, [response]);
+    }, []);
 
     return (
         <div className="page">
             <h1>Professors</h1>
             <ul>
-                {response && response.professors.list.map((professorItem) => (
+                {professors && professors.map((professorItem) => (
                     <ProfessorCard
                         key={professorItem.id} id={professorItem.id} professor={professorItem.professor} buttons={professorOptions}
                     />
@@ -139,4 +150,4 @@ const Professors: React.FC = () => {
     );
 }
 
-export default Professors;
+export default ProfessorsList;
